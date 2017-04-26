@@ -46,7 +46,8 @@
 
       socket.on('chat message', function(msg) {
         if (msg !== '') {
-          $('#messages').append($('<li>').text(myName + ' says: ' + msg));
+          $('#typing-status').text('');
+          $('#messages').append($('<li>').text(msg));
         }
       });
 
@@ -65,6 +66,7 @@
 
       socket.on('user disconnected', function(payload) {
         console.log(payload);
+        $('#typing-status').text('');
         $('#messages').append($('<li>').text(payload.name + ' disconnected'));
         $(`#${payload.user}`).remove();
       });

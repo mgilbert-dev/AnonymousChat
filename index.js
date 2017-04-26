@@ -44,7 +44,7 @@ io.on('connection', function(socket) {
       handleCommand(payload, io);
     }
     else {
-      io.emit('chat message', payload.message);
+      io.emit('chat message', users[payload.id].name + ' says: ' + payload.message);
     }
   });
 
