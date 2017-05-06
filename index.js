@@ -42,7 +42,7 @@ io.on('connection', function(socket) {
 
   socket.on('chat message', function(payload) {
     if (payload.message.startsWith('/')) {
-      handleCommand(payload, io);
+      handleCommand(payload);
     }
     else {
       io.emit('chat message', {
@@ -69,10 +69,10 @@ io.on('connection', function(socket) {
 });
 
 http.listen(process.env.PORT || 5000, function() {
-  console.log('listening on *:3000');
+  console.log('listening on *:' + (process.env.PORT || 5000));
 });
 
-function handleCommand(payload, io) {
+function handleCommand(payload) {
   let operation = payload.message.split(' ')[0];
   let argument = payload.message.split(' ')[1];
   users[payload.id].lockedOut = false;
@@ -94,9 +94,24 @@ function handleCommand(payload, io) {
       });
       break;
 
+    case '/users':
+      let userList = Object.keys(users).map( (el,idx) => {
+        if (idx < Object.keys(users).length - 1) {
+          return users[el].name + ',';
+        }
+        else {
+          return users[el].name + '.';
+        }
+      }).join(' ');
+      io.emit('list users', {
+        message: 'Users in room: ' + userList,
+        id: payload.id
+      });
+      break;
+
     case '/commands':
       io.emit('list commands', {
-        message: "/name [new name] - change your name. /color [desired color] - change your font (to everyone).",
+        message: "/name name - change your name. /color color - change your font (displayed to everyone). /users - List users in room.",
         id: payload.id
       });
       break;

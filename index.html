@@ -4,20 +4,33 @@
     <title>Socket.IO chat</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; font-family: monospace;}
-      body { font-size:calc(3px + 1vw) }
-      form { background: #000; padding: 2.5px; position: fixed; bottom: 0; width: 100%; }
+      /*body { font-size:calc(3px + 1vw) }*/
+      form { background: #000; padding: 2.5px; position: fixed; bottom: 0; width: 100%; min-height: 50px}
+      .mobile { display: none }
       form input { border: 0; border-radius: 5px; padding: 10px; margin: 5px; width: 80vw; font-size:calc(4px + 1vw)}
       form button { width: 10vw; right: 5vw; position: absolute; background-color: darkslateblue; border: none; border-radius: 10px; color: white; font-size:calc(5px + 1vw); font-family: sans-serif; padding: 5px; top: 50%; transform: translateY(-50%);}
       form button:hover { background-color:darkcyan; color: black; transition: 0.5s ease}
       #messages { list-style-type: none; margin: 0; padding: 0; max-width: 80vw}
-      #messages li { padding: 5px 10px; }
+      #messages li { padding: 5px 10px; font-size: 16px }
       #messages li:nth-child(odd) { background: #eee; }
       #typing-status { padding: 5px 10px; }
       #users { list-style-type: none; overflow-y: scroll; position: absolute; height: 100%; width: 20vw; right: 0; top: 0; background-color: white; }
       #users li:nth-child(2n + 3) {background: #94eaba }
       #users li:nth-child(even) {background: #eab1b1}
       #users li { margin: 10px; padding: 5px; text-align: center; border-radius: 5px }
-      .new-message {transition: all 0.2s ease; font-weight: bold; color: green; font-size:calc(14px + 1.5vw);}
+      /*.new-message {transition: all 0.2s ease; font-weight: bold; color: green; font-size:calc(14px + 1.5vw);}*/
+      @media screen and (max-device-width: 480px) {
+        * { font-size: 30px }
+        .desktop { display: none }
+        .mobile { display: inline-block;}
+        #users { display: none }
+        #users li { display: none }
+        #messages { width: 100vw; }
+        #messages li { font-size: 36px; width: 100vw; }
+        form { height: 120px }
+        form button { height: 70px; width: 70px; text-align: center; font-size: 50px}
+        form input { top: 50%; position: absolute; transform: translateY(-50%); height: 70px; margin: 0 20px; border-radius: 10px; line-height: 70px; font-size: 36px;}
+      }
     </style>
   </head>
   <body>
@@ -27,7 +40,7 @@
       <li style="font-weight: bold; text-align: center">Users in room:</li>
     </ul>
     <form action="">
-      <input id="m" autocomplete="off" placeholder="Use commands with /[command]. Type '/commands' to get a list of available commands."/><button>Send</button>
+      <input id="m" autocomplete="off" placeholder="List commands with /commands"/><button class="desktop">Send</button><button class="mobile">S</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
@@ -59,8 +72,7 @@
             messageElement.css({
               transition: 'all 0.2s ease', 
               fontWeight: 'bold', 
-              color: payload.color, 
-              fontSize: '16px'
+              color: payload.color
             });
           });
         }
@@ -130,6 +142,13 @@
       });
 
       socket.on('set color', function(payload) {
+        if (payload.id === myId) {
+          let messageElement = $('<li>').text(payload.message);
+          $('#messages').append(messageElement);
+        }
+      });
+
+      socket.on('list users', function(payload) {
         if (payload.id === myId) {
           let messageElement = $('<li>').text(payload.message);
           $('#messages').append(messageElement);
