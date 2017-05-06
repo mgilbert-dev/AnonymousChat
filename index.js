@@ -15,7 +15,7 @@ io.on('connection', function(socket) {
 
   socket.on('user connected', function(userId) {
     users[userId] = {
-      name: 'Anonymous user',
+      name: 'Anonymous-user',
       socketId: socket.id,
       color: 'black',
       lockedOut: false
@@ -45,7 +45,7 @@ io.on('connection', function(socket) {
     if (payload.message.startsWith('/')) {
       handleCommand(payload);
     }
-    else {
+    else if (payload.message !== '') {
       io.emit('chat message', {
         message: users[payload.id].name + ' says: ' + payload.message,
         color: users[payload.id].color
@@ -96,15 +96,20 @@ function handleCommand(payload) {
       break;
 
     case '/whisper':
-      let targetUsers = Object.keys(users).filter(el => {
-        return users[el].name === argument;
-      });
-      let sender = users[payload.id].name;
-      io.emit('whisper', {
-        message: sender + ' > ' + argument + ': ' + payload.message.substr(payload.message.indexOf(payload.message.split(' ')[2])),
-        id: payload.id,
-        targetUsers: targetUsers
-      });
+      if (payload.message.indexOf(payload.message.split(' ')[2]) > 0) {
+        let targetUsers = Object.keys(users).filter(el => {
+          return users[el].name === argument;
+        });
+        let sender = users[payload.id].name;
+        let message = payload.message.substr(payload.message.indexOf(payload.message.split(' ')[2]));
+        console.log(message);
+        io.emit('whisper', {
+          message: sender + ' > ' + argument + ': ' + message,
+          id: payload.id,
+          targetUsers: targetUsers
+        });
+      }
+      
       break;
 
     case '/users':
@@ -129,6 +134,5 @@ function handleCommand(payload) {
       });
       break;
     default:
-
   }
 }
