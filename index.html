@@ -55,14 +55,6 @@
           $('#typing-status').text('');
           let messageElement = $('<li>').text(payload.message);
           $('#messages').append(messageElement);
-          window.setTimeout(()=> {
-            messageElement.css({
-              transition: 'all 0.2s ease', 
-              fontWeight: 'bold', 
-              color: 'green', 
-              fontSize: '16px'
-            });
-          });
           window.setTimeout(() => {
             messageElement.css({
               transition: 'all 0.2s ease', 
@@ -70,7 +62,7 @@
               color: payload.color, 
               fontSize: '16px'
             });
-          },500);
+          });
         }
       });
 

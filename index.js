@@ -58,9 +58,7 @@ io.on('connection', function(socket) {
       setTimeout(() => {
         users[payload.id].lockedOut = false;
       },5000);
-    } else if (users[payload.id].lockedOut) {
-      console.log(users[payload.id].name + ' is locked out');
-    } else {
+    } else if (!users[payload.id].lockedOut) {
       io.emit('user typing', payload);
     }
   });
