@@ -46,12 +46,27 @@
     <script>
     $(function() {
       var inputForm = $('form input');
+      if (Notification.permission !== "granted") {
+        Notification.requestPermission(function(permission) {
+          if (permission === "granted") {
+            var notification = new Notification("Notifications enabled. Will only display if window is tabbed out.");
+          }
+        })
+      }
       inputForm.focus();
       var socket = io();
       var myInterval;
       var myName = 'Anonymous user';
       var myId = makeId();
       var myColor = 'black';
+
+      function spawnNotification(theBody,theIcon,theTitle) {
+        var options = {
+            body: theBody,
+            icon: theIcon
+        }
+        var n = new Notification(theTitle,options);
+      }
 
       socket.emit('user connected', myId);
 
@@ -105,6 +120,7 @@
           let messageElement = $('<li>').text(payload.message);
           $('#messages').append(messageElement);
           if (payload.id != myId) {
+            spawnNotification(payload.message, 'https://maxcdn.icons8.com/Share/icon/Messaging//message_outline1600.png','New whisper!');
             window.setTimeout(() => {
               messageElement.css({
                 transition: 'all 0.2s ease', 
