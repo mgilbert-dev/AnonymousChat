@@ -56,7 +56,7 @@
       inputForm.focus();
       var socket = io();
       var myInterval;
-      var myName = 'Anonymous user';
+      var myName = 'Anonymous-user';
       var myId = makeId();
       var myColor = 'black';
 
@@ -104,7 +104,14 @@
               $(`#${user}`).remove();
             }
             var element = $("<li id='" + user + "'>" + users[user].name + "</li>");
+            element.css({
+              cursor: 'pointer'
+            })
             $('#users').append(element);
+            element.click(function(e) {
+              $('form input').val('/whisper ' + users[user].name + ' ');
+               $('form input').focus();
+            })
           }
         }
       });
