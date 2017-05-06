@@ -82,7 +82,7 @@ function handleCommand(payload) {
       var previousName = users[payload.id].name;
       users[payload.id].name = argument;
       io.emit('set name', {
-        message: previousName + ' changed their name to ' + argument,
+        message: previousName + ' changed their name to ' + argument + '.',
         users: users
       });
       break;
