@@ -59,7 +59,7 @@ io.on('connection', function(socket) {
       setTimeout(() => {
         users[payload.id].lockedOut = false;
       },5000);
-    } else if (!users[payload.id].lockedOut) {
+    } else if (users[payload.id] && !users[payload.id].lockedOut) {
       io.emit('user typing', payload);
     }
   });
