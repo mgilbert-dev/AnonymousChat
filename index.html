@@ -45,6 +45,8 @@
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
     $(function() {
+      var inputForm = $('form input');
+      inputForm.focus();
       var socket = io();
       var myInterval;
       var myName = 'Anonymous user';
@@ -96,6 +98,33 @@
         $('#typing-status').text('');
         $('#messages').append($('<li>').text(payload.name + ' disconnected'));
         $(`#${payload.user}`).remove();
+      });
+
+      socket.on('whisper', function(payload) {
+        if (payload.targetUsers.some(el => el === myId) || payload.id === myId) {
+          let messageElement = $('<li>').text(payload.message);
+          $('#messages').append(messageElement);
+          if (payload.id != myId) {
+            window.setTimeout(() => {
+              messageElement.css({
+                transition: 'all 0.2s ease', 
+                color: 'red',
+                fontStyle: 'italic',
+                fontWeight: 'bold'
+              });
+            });
+          }
+          else {
+            window.setTimeout(() => {
+              messageElement.css({
+                transition: 'all 0.2s ease', 
+                fontWeight: 'normal', 
+                color: '#989898',
+                fontStyle: 'italic'
+              });
+            });
+          }
+        }
       });
 
       $('#m').keydown(function(e) {

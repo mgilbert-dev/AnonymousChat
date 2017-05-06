@@ -95,6 +95,18 @@ function handleCommand(payload) {
       });
       break;
 
+    case '/whisper':
+      let targetUsers = Object.keys(users).filter(el => {
+        return users[el].name === argument;
+      });
+      let sender = users[payload.id].name;
+      io.emit('whisper', {
+        message: sender + ' > ' + argument + ': ' + payload.message.substr(payload.message.indexOf(payload.message.split(' ')[2])),
+        id: payload.id,
+        targetUsers: targetUsers
+      });
+      break;
+
     case '/users':
       let userList = Object.keys(users).map( (el,idx) => {
         if (idx < Object.keys(users).length - 1) {
@@ -112,7 +124,7 @@ function handleCommand(payload) {
 
     case '/commands':
       io.emit('list commands', {
-        message: "/name name - change your name. /color color - change your font (displayed to everyone). /users - List users in room.",
+        message: "Commands: /name <name> - change your name. /color <color> - change your font color. /users - List users in room. /whisper <name> <message> - Directly message everyone with that name.",
         id: payload.id
       });
       break;
