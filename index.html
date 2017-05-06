@@ -4,18 +4,20 @@
     <title>Socket.IO chat</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; font-family: monospace;}
-      body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background-color: darkslateblue; border: none; border-radius: 10px; color: white; font-size: 14px; font-family: sans-serif; padding: 10px; }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
+      body { font-size:calc(3px + 1vw) }
+      form { background: #000; padding: 2.5px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; border-radius: 5px; padding: 10px; margin: 5px; width: 80vw; font-size:calc(4px + 1vw)}
+      form button { width: 10vw; right: 5vw; position: absolute; background-color: darkslateblue; border: none; border-radius: 10px; color: white; font-size:calc(5px + 1vw); font-family: sans-serif; padding: 5px; top: 50%; transform: translateY(-50%);}
+      form button:hover { background-color:darkcyan; color: black; transition: 0.5s ease}
+      #messages { list-style-type: none; margin: 0; padding: 0; max-width: 80vw}
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
       #typing-status { padding: 5px 10px; }
-      #users { list-style-type: none; position: absolute; height: 100%; width: 20vw; right: 0; top: 0; border: 1px solid black; background-color: white; }
-      #users li:nth-child(odd) {background: #94eaba }
+      #users { list-style-type: none; position: absolute; height: 100%; width: 20vw; right: 0; top: 0; background-color: white; }
+      #users li:nth-child(2n + 3) {background: #94eaba }
       #users li:nth-child(even) {background: #eab1b1}
       #users li { margin: 10px; padding: 5px; text-align: center; border-radius: 5px }
+      .new-message {transition: all 0.2s ease; font-weight: bold; color: green; font-size:calc(14px + 1.5vw);}
     </style>
   </head>
   <body>
@@ -25,7 +27,7 @@
       <li style="font-weight: bold; text-align: center">Users in room:</li>
     </ul>
     <form action="">
-      <input id="m" autocomplete="off" /><button>Send</button>
+      <input id="m" autocomplete="off" placeholder="Use commands with /[command]. Type '/commands' to get a list of available commands."/><button>Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
@@ -35,6 +37,7 @@
       var myInterval;
       var myName = 'Anonymous user';
       var myId = makeId();
+      var myColor = 'black';
 
       socket.emit('user connected', myId);
 
@@ -47,10 +50,27 @@
         return false;
       });
 
-      socket.on('chat message', function(msg) {
-        if (msg !== '') {
+      socket.on('chat message', function(payload) {
+        if (payload.message !== '') {
           $('#typing-status').text('');
-          $('#messages').append($('<li>').text(msg));
+          let messageElement = $('<li>').text(payload.message);
+          $('#messages').append(messageElement);
+          window.setTimeout(()=> {
+            messageElement.css({
+              transition: 'all 0.2s ease', 
+              fontWeight: 'bold', 
+              color: 'green', 
+              fontSize: '16px'
+            });
+          });
+          window.setTimeout(() => {
+            messageElement.css({
+              transition: 'all 0.2s ease', 
+              fontWeight: 'bold', 
+              color: payload.color, 
+              fontSize: '16px'
+            });
+          },500);
         }
       });
 
@@ -73,10 +93,11 @@
         $(`#${payload.user}`).remove();
       });
 
-      $('#m').keydown(function() {
+      $('#m').keydown(function(e) {
         socket.emit('user typing', {
           name: myName,
-          id: myId
+          id: myId,
+          key: e.key
         });
       });
 
@@ -113,6 +134,20 @@
             var element = $("<li id='" + user + "'>" + payload.users[user].name + "</li>");
             $('#users').append(element);
           }
+        }
+      });
+
+      socket.on('set color', function(payload) {
+        if (payload.id === myId) {
+          let messageElement = $('<li>').text(payload.message);
+          $('#messages').append(messageElement);
+        }
+      });
+
+      socket.on('list commands', function(payload) {
+        if (payload.id === myId) {
+          let messageElement = $('<li>').text(payload.message);
+          $('#messages').append(messageElement);
         }
       });
 

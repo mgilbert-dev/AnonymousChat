@@ -15,7 +15,9 @@ io.on('connection', function(socket) {
   socket.on('user connected', function(userId) {
     users[userId] = {
       name: 'Anonymous user',
-      socketId: socket.id
+      socketId: socket.id,
+      color: 'black',
+      lockedOut: false
     };
     io.emit('user connected', users);
   });
@@ -43,12 +45,24 @@ io.on('connection', function(socket) {
       handleCommand(payload, io);
     }
     else {
-      io.emit('chat message', users[payload.id].name + ' says: ' + payload.message);
+      io.emit('chat message', {
+        message: users[payload.id].name + ' says: ' + payload.message,
+        color: users[payload.id].color
+      });
     }
   });
 
-  socket.on('user typing', function(msg) {
-    io.emit('user typing', msg);
+  socket.on('user typing', function(payload) {
+    if (payload.key === '/') {
+      users[payload.id].lockedOut = true;
+      setTimeout(() => {
+        users[payload.id].lockedOut = false;
+      },5000);
+    } else if (users[payload.id].lockedOut) {
+      console.log(users[payload.id].name + ' is locked out');
+    } else {
+      io.emit('user typing', payload);
+    }
   });
 
   socket.on('user stop typing', function(msg) {
@@ -63,7 +77,7 @@ http.listen(process.env.PORT || 5000, function() {
 function handleCommand(payload, io) {
   let operation = payload.message.split(' ')[0];
   let argument = payload.message.split(' ')[1];
-
+  users[payload.id].lockedOut = false;
   switch (operation) {
     case '/name':
       var previousName = users[payload.id].name;
@@ -71,6 +85,21 @@ function handleCommand(payload, io) {
       io.emit('set name', {
         message: previousName + ' changed their name to ' + argument,
         users: users
+      });
+      break;
+    
+    case '/color':
+      users[payload.id].color = argument;
+      io.emit('set color', {
+        message: 'You changed your color to ' + argument + '.',
+        id: payload.id
+      });
+      break;
+
+    case '/commands':
+      io.emit('list commands', {
+        message: "/name [new name] - change your name. /color [desired color] - change your font (to everyone).",
+        id: payload.id
       });
       break;
     default:
