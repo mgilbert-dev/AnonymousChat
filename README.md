@@ -1,1 +1,1 @@
-https://openchatr.herokuapp.com/
+https://openchattr.herokuapp.com/
