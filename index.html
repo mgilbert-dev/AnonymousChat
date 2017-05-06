@@ -68,7 +68,6 @@
       });
 
       socket.on('user disconnected', function(payload) {
-        console.log(payload);
         $('#typing-status').text('');
         $('#messages').append($('<li>').text(payload.name + ' disconnected'));
         $(`#${payload.user}`).remove();
@@ -89,7 +88,6 @@
       });
 
       socket.on('user typing', function(payload) {
-        console.log(payload);
         if (payload.id !== myId) {
           $('#typing-status').text(payload.name + ' is typing...');
           window.clearInterval(myInterval);

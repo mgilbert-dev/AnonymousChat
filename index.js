@@ -21,7 +21,6 @@ io.on('connection', function(socket) {
   });
 
   socket.on('disconnect', function(){
-    console.log('user disconnected');
     let userName;
     let userId;
     for (let user in users) {
