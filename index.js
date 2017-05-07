@@ -1,4 +1,3 @@
-require('newrelic');
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
@@ -86,7 +85,7 @@ function handleCommand(payload) {
         users: users
       });
       break;
-    
+
     case '/color':
       users[payload.id].color = argument;
       io.emit('set color', {
@@ -109,7 +108,7 @@ function handleCommand(payload) {
           targetUsers: targetUsers
         });
       }
-      
+
       break;
 
     case '/users':
