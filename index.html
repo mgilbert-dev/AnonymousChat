@@ -4,20 +4,20 @@
     <title>OpenChattr</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; font-family: monospace;}
-      body { font-size:calc(3px + 1vw) }
+      body { font-size:calc(3px + 1vw); background-color: black}
       form { background: #000; padding: 2.5px; position: fixed; bottom: 0; width: 100%; min-height: 50px; height: 10vh}
       .mobile { display: none }
       form input { border: 0; border-radius: 5px; padding: 10px; margin: 0 10px; position: absolute; top: 50%; transform: translateY(-50%); width: 80vw; font-size:calc(4px + 1vw)}
-      form button { width: 10vw; right: 5vw; position: absolute; background-color: darkslateblue; border: none; border-radius: 10px; color: white; font-size:calc(5px + 1vw); font-family: sans-serif; padding: 5px; top: 50%; transform: translateY(-50%);}
-      form button:hover { background-color:darkcyan; color: black; transition: 0.5s ease}
-      #messages { list-style-type: none; margin: 0; padding: 0; max-width: 80vw; height: 90vh; overflow: auto}
-      #messages li { padding: 5px 10px; font-size: 16px }
-      #messages li:nth-child(odd) { background: #eee; }
-      #typing-status { padding: 5px 10px; }
-      #users { list-style-type: none; overflow-y: scroll; position: fixed; height: 100%; width: 20vw; right: 0; top: 0; background-color: white; }
-      #users li:nth-child(2n + 3) {background: #94eaba }
-      #users li:nth-child(even) {background: #eab1b1}
+      form button { width: 10vw; right: 5vw; position: absolute; background-color: darkcyan; border: none; border-radius: 10px; color: black; font-size:calc(5px + 1vw); font-family: sans-serif; padding: 5px; top: 50%; transform: translateY(-50%);}
+      form button:hover { background-color:darkcyan; color: white; transition: 0.5s ease}
+      #messages { display: flex; flex-direction: column; list-style-type: none; margin: 0; padding: 0; max-width: 80vw; height: 90vh; overflow: auto}
+      #messages li { padding: 5px 10px; font-size: 16px; background:transparent; color: white }
+      #typing-status { padding: 5px 10px; order: 1; color: white;}
+      #users { list-style-type: none; overflow-y: scroll; position: fixed; height: 100%; width: 20vw; right: 0; top: 0; background: transparent; color: limegreen}
+      #users li:nth-child(2n + 3) {background: #94eaba; color: black; }
+      #users li:nth-child(even) {background: #eab1b1; color: black;}
       #users li { margin: 10px; padding: 5px; text-align: center; border-radius: 5px }
+      ::-webkit-scrollbar { width: 0px; background: transparent }
       @media screen and (max-device-width: 480px) {
         * { font-size: 20px }
         .desktop { display: none }
@@ -33,8 +33,9 @@
     </style>
   </head>
   <body>
-    <ul id="messages"></ul>
-    <div id="typing-status"></div>
+    <ul id="messages">
+      <li style="order: 1" id="typing-status"></li>
+    </ul>
     <ul id="users">
       <li style="font-weight: bold; text-align: center">Users in room:</li>
     </ul>
@@ -58,7 +59,7 @@
       var myInterval;
       var myName = 'Anonymous-user';
       var myId = makeId();
-      var myColor = 'black';
+      var myColor = 'limegreen';
 
       function spawnNotification(theBody,theIcon,theTitle) {
         var options = {
@@ -83,14 +84,11 @@
         if (payload.message !== '') {
           $('#typing-status').text('');
           let messageElement = $('<li>').text(payload.message);
-          $('#messages').append(messageElement);
-          window.setTimeout(() => {
-            messageElement.css({
-              transition: 'all 0.2s ease', 
+          messageElement.css({ 
               fontWeight: 'bold', 
               color: payload.color
             });
-          });
+          $('#messages').append(messageElement);
           let topOffset = messageElement.position().top;
           $('#messages').animate({scrollTop: topOffset});
         }
@@ -106,7 +104,7 @@
             var element = $("<li id='" + user + "'>" + users[user].name + "</li>");
             element.css({
               cursor: 'pointer'
-            })
+            });
             $('#users').append(element);
             element.click(function(e) {
               $('form input').val('/whisper ' + users[user].name + ' ');
@@ -125,28 +123,23 @@
       socket.on('whisper', function(payload) {
         if (payload.targetUsers.some(el => el === myId) || payload.id === myId) {
           let messageElement = $('<li>').text(payload.message);
-          $('#messages').append(messageElement);
+          
           if (payload.id != myId) {
             spawnNotification(payload.message, 'https://maxcdn.icons8.com/Share/icon/Messaging//message_outline1600.png','New whisper!');
-            window.setTimeout(() => {
-              messageElement.css({
-                transition: 'all 0.2s ease', 
+            messageElement.css({
                 color: 'red',
                 fontStyle: 'italic',
                 fontWeight: 'bold'
               });
-            });
           }
           else {
-            window.setTimeout(() => {
-              messageElement.css({
-                transition: 'all 0.2s ease', 
+            messageElement.css({
                 fontWeight: 'normal', 
                 color: '#989898',
                 fontStyle: 'italic'
               });
-            });
           }
+          $('#messages').append(messageElement);
         }
       });
 
@@ -189,6 +182,9 @@
               $(`#${user}`).remove();
             }
             var element = $("<li id='" + user + "'>" + payload.users[user].name + "</li>");
+            element.css({
+              cursor: 'pointer'
+            });
             $('#users').append(element);
           }
         }
@@ -210,8 +206,11 @@
 
       socket.on('list commands', function(payload) {
         if (payload.id === myId) {
-          let messageElement = $('<li>').text(payload.message);
-          $('#messages').append(messageElement);
+          $('#messages').append($('<li>').text('Available commands (use without quotes or brackets):'));
+          for (let i=0; i< payload.commands.length;i++) {
+            let messageElement = $('<li>').text(payload.commands[i]).css({marginLeft: '10px'});
+            $('#messages').append(messageElement);
+          }       
         }
       });
 

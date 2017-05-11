@@ -16,7 +16,7 @@ io.on('connection', function(socket) {
     users[userId] = {
       name: 'Anonymous-user',
       socketId: socket.id,
-      color: 'black',
+      color: 'limegreen',
       lockedOut: false
     };
     io.emit('user connected', users);
@@ -128,7 +128,7 @@ function handleCommand(payload) {
 
     case '/commands':
       io.emit('list commands', {
-        message: "Commands: /name <name> - change your name. /color <color> - change your font color. /users - List users in room. /whisper <name> <message> - Directly message everyone with that name.",
+        commands: ['\'/name [name]\' - change your name.', '\'/color [color]\' - change your font color.', '\'/users\' - List users in room.', '\'/whisper [name] [message]\' - Directly message everyone with that name.'],
         id: payload.id
       });
       break;
