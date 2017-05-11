@@ -219,6 +219,25 @@
         }
       });
 
+      socket.on('rps', function(payload) {
+        console.log('rps!', payload);
+        if (payload.broadcast) {
+          let messageElement = $('<li>').text(payload.message).css({color: 'green'});
+          $('#messages').append(messageElement);
+        }
+        else if (payload.id === myId) {
+          let messageElement = $('<li>').text(payload.message).css({color: 'green'});
+          $('#messages').append(messageElement);
+        }
+      });
+
+      socket.on('warning', function(payload) {
+        if (payload.id === myId) {
+          let messageElement = $('<li>').text(payload.warning).css({color: 'red'});
+          $('#messages').append(messageElement);
+        }
+      });
+
       function makeId() {
         var text = "";
         var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

@@ -10,6 +10,15 @@ var users = {
 
 };
 
+var activities = {
+  rockPaperScissors: {
+    currentGame: false,
+    players: {
+      
+    }
+  }
+};
+
 io.on('connection', function(socket) {
 
   socket.on('user connected', function(userId) {
@@ -101,7 +110,6 @@ function handleCommand(payload) {
         });
         let sender = users[payload.id].name;
         let message = payload.message.substr(payload.message.indexOf(payload.message.split(' ')[2]));
-        console.log(message);
         io.emit('whisper', {
           message: sender + ' > ' + argument + ': ' + message,
           id: payload.id,
@@ -126,12 +134,132 @@ function handleCommand(payload) {
       });
       break;
 
+    case '/rps':
+      if (activities.rockPaperScissors.currentGame) {
+        if (['rock', 'paper', 'scissors', 'r', 'p', 's'].includes(argument)) {
+          activities.rockPaperScissors.players[payload.id] = argument;
+        }
+        else {
+           emitWarning('Invalid action. Valid inputs are \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'', payload.id);
+        }
+        if (parseInt(activities.rockPaperScissors.numPlayers) === Object.keys(activities.rockPaperScissors.players).length) {
+          let rock = [];
+          let rockPlayers = "";
+          let paper = [];
+          let paperPlayers = "";
+          let scissors = [];
+          let scissorsPlayers = "";
+          for (let player in activities.rockPaperScissors.players) {
+            if (activities.rockPaperScissors.players.hasOwnProperty(player)) {
+              let action = activities.rockPaperScissors.players[player];
+              let playerName = users[player].name;
+              if (action === 'rock' || action === 'r') {
+                rock.push(playerName);
+              }
+              else if (action === 'paper' || action === 'p') {
+                paper.push(playerName);
+              }
+              else if (action === 'scissors' || action === 's') {
+                scissors.push(playerName);
+              }
+            }
+          }
+          let message = "The results are in! ";
+          for (let i = 0; i < paper.length; i++) {
+            if (paper.length === 1) {
+              paperPlayers += paper[i];
+            }
+            else if (i === paper.length - 1) {
+              paperPlayers += `and ${paper[i]}`;
+            }
+            else if (paper.length > 2) {
+              paperPlayers += `${paper[i]}, `;
+            }
+            else {
+              paperPlayers += `${paper[i]} `;
+            }
+          }
+          for (let j = 0; j < rock.length; j++) {
+            if (rock.length === 1) {
+              rockPlayers += rock[j];
+            }
+            else if (j === rock.length - 1) {
+              rockPlayers += `and ${rock[j]}`;
+            }
+            else if (rock.length > 2) {
+              rockPlayers += `${rock[j]}, `;
+            }
+            else {
+              rockPlayers += `${rock[j]} `;
+            }
+          }
+          for (let k = 0; k < scissors.length; k++) {
+            if (scissors.length === 1) {
+              scissorsPlayers += scissors[k];
+            }
+            else if (k === scissors.length - 1) {
+              scissorsPlayers += `and ${scissors[k]}`;
+            }
+            else if (scissors.length > 2) {
+              scissorsPlayers += `${scissors[k]}, `;
+            }
+            else {
+              scissorsPlayers += `${scissors[k]} `;
+            }
+          }
+          rockPlayers = rockPlayers || "nobody";
+          paperPlayers = paperPlayers || "nobody";
+          scissorsPlayers = scissorsPlayers || "nobody";
+          message += `Playing as rock, ${rockPlayers} beat ${scissorsPlayers}. Playing as paper, ${paperPlayers} beat ${rockPlayers}. And playing as scissors, ${scissorsPlayers} beat ${paperPlayers}.`;
+          activities.rockPaperScissors = {
+            currentGame: false,
+            players: {
+              
+            }
+          };
+          io.emit('rps', {
+            id: payload.id,
+            broadcast: true,
+            message: message
+          });
+        }
+        else {
+          io.emit('rps', {
+            id: payload.id,
+            broadcast: true,
+            message: `${users[payload.id].name} has submitted their decision. ${activities.rockPaperScissors.numPlayers - Object.keys(activities.rockPaperScissors.players).length} spots left.`
+          });
+        }
+      }
+      else if (argument <= Object.keys(users).length) {
+        activities.rockPaperScissors.currentGame = true;
+        activities.rockPaperScissors.numPlayers = argument;
+        io.emit('rps', {
+          id: payload.id,
+          broadcast: true,
+          message: `${users[payload.id].name} has started a game of \'Rock, Paper, Scissors\', and initiated it to ${argument} players. The game will resolve once ${argument} players have submitted their choice. Type \'/commands\' for instructions.`
+        });
+      }
+      else {
+        emitWarning('The game has either already been initiated or you didn\'t enter a number larger than the number of users in the room', payload.id);
+      }
+      break;
+
     case '/commands':
       io.emit('list commands', {
-        commands: ['\'/name [name]\' - change your name.', '\'/color [color]\' - change your font color.', '\'/users\' - List users in room.', '\'/whisper [name] [message]\' - Directly message everyone with that name.'],
+        commands: ['\'/name [name]\' - change your name.', '\'/color [color]\' - change your font color.', '\'/users\' - List users in room.', '\'/whisper [name] [message]\' - Directly message everyone with that name.','\'/rps [number]\' - Initiates a game of \'Rock, Paper, Scissors\' with [number] open spots.', '\'/rps [action]\' - If a game has started, declare your action with \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'.'],
         id: payload.id
       });
       break;
     default:
   }
+}
+
+
+
+function emitWarning(message, userId) {
+  io.emit('warning', {
+    warning: message,
+    id: userId
+  });
 }
