@@ -7,8 +7,8 @@
       body { font-size:calc(3px + 1vw); background-color: black}
       form { background: #000; padding: 2.5px; position: fixed; bottom: 0; width: 100%; min-height: 50px; height: 10vh}
       .mobile { display: none }
-      form input { border: 0; border-radius: 5px; padding: 10px; margin: 0 10px; position: absolute; top: 50%; transform: translateY(-50%); width: 80vw; font-size:calc(4px + 1vw)}
-      form button { width: 10vw; right: 5vw; position: absolute; background-color: darkcyan; border: none; border-radius: 10px; color: black; font-size:calc(5px + 1vw); font-family: sans-serif; padding: 5px; top: 50%; transform: translateY(-50%);}
+      form input { outline: none; height: 5vh; border: 0; border-radius: 5px; padding: 10px; margin: 0 10px; position: absolute; top: 50%; transform: translateY(-50%); width: 80vw; font-size:calc(4px + 1vw); color: red; text-shadow: 0px 0px 0px #000; -webkit-text-fill-color: transparent;}
+      form button { height: 5vh; width: 10vw; right: 5vw; position: absolute; background-color: darkcyan; border: none; border-radius: 10px; color: black; font-size:calc(5px + 1vw); font-family: sans-serif; padding: 5px; top: 50%; transform: translateY(-50%);}
       form button:hover { background-color:darkcyan; color: white; transition: 0.5s ease}
       #messages { display: flex; flex-direction: column; list-style-type: none; margin: 0; padding: 0; max-width: 80vw; height: 90vh; overflow: auto}
       #messages li { padding: 5px 10px; font-size: 16px; background:transparent; color: white }
@@ -37,7 +37,7 @@
       <li style="order: 1" id="typing-status"></li>
     </ul>
     <ul id="users">
-      <li style="font-weight: bold; text-align: center">Users in room:</li>
+      <li style="text-align: center">Users in room:</li>
     </ul>
     <form action="">
       <input id="m" autocomplete="off" placeholder="List commands with /commands"/><button class="desktop">Send</button><button class="mobile">S</button>
@@ -85,7 +85,6 @@
           $('#typing-status').text('');
           let messageElement = $('<li>').text(payload.message);
           messageElement.css({ 
-              fontWeight: 'bold', 
               color: payload.color
             });
           $('#messages').append(messageElement);
@@ -105,11 +104,11 @@
             element.css({
               cursor: 'pointer'
             });
-            $('#users').append(element);
             element.click(function(e) {
               $('form input').val('/whisper ' + users[user].name + ' ');
                $('form input').focus();
             })
+            $('#users').append(element);
           }
         }
       });
@@ -185,6 +184,12 @@
             element.css({
               cursor: 'pointer'
             });
+
+            element.click(function(e) {
+              $('form input').val('/whisper ' + payload.users[user].name + ' ');
+               $('form input').focus();
+            })
+
             $('#users').append(element);
           }
         }
