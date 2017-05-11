@@ -94,7 +94,10 @@
       });
 
       socket.on('user connected', function(users) {
-        $('#messages').append($('<li>').text('Anonymous user connected'));
+        let messageElement = $('<li>').text('Anonymous user connected');
+        $('#messages').append(messageElement);
+        let topOffset = messageElement.position().top;
+        $('#messages').animate({scrollTop: topOffset});
         for (let user in users) {
           if (users.hasOwnProperty(user)) {
             if ($(`#${user}`)) {
@@ -115,7 +118,10 @@
 
       socket.on('user disconnected', function(payload) {
         $('#typing-status').text('');
-        $('#messages').append($('<li>').text(payload.name + ' disconnected'));
+        let messageElement = $('<li>').text(payload.name + ' disconnected');
+        $('#messages').append(messageElement);
+        let topOffset = messageElement.position().top;
+        $('#messages').animate({scrollTop: topOffset});
         $(`#${payload.user}`).remove();
       });
 
@@ -139,6 +145,8 @@
               });
           }
           $('#messages').append(messageElement);
+          let topOffset = messageElement.position().top;
+          $('#messages').animate({scrollTop: topOffset});
         }
       });
 
@@ -158,9 +166,12 @@
       });
 
       socket.on('user typing', function(payload) {
+        
         if (payload.id !== myId) {
           $('#typing-status').text(payload.name + ' is typing...');
           window.clearInterval(myInterval);
+          let topOffset = $('#typing-status').position().top;
+          $('#messages').animate({scrollTop: topOffset});
         }
       });
 
@@ -173,7 +184,10 @@
       });
 
       socket.on('set name', function(payload) {
-        $('#messages').append($('<li>').text(payload.message));
+        let messageElement = $('<li>').text(payload.message);
+        $('#messages').append(messageElement);
+        let topOffset = messageElement.position().top;
+        $('#messages').animate({scrollTop: topOffset});
         myName = payload.users[myId].name;
         for (let user in payload.users) {
           if (payload.users.hasOwnProperty(user)) {
@@ -191,6 +205,8 @@
             })
 
             $('#users').append(element);
+            let topOffset = element.position().top;
+            $('#messages').animate({scrollTop: topOffset});
           }
         }
       });
@@ -199,6 +215,8 @@
         if (payload.id === myId) {
           let messageElement = $('<li>').text(payload.message);
           $('#messages').append(messageElement);
+          let topOffset = messageElement.position().top;
+          $('#messages').animate({scrollTop: topOffset});
         }
       });
 
@@ -206,35 +224,44 @@
         if (payload.id === myId) {
           let messageElement = $('<li>').text(payload.message);
           $('#messages').append(messageElement);
+          let topOffset = messageElement.position().top;
+          $('#messages').animate({scrollTop: topOffset});
         }
       });
 
       socket.on('list commands', function(payload) {
         if (payload.id === myId) {
           $('#messages').append($('<li>').text('Available commands (use without quotes or brackets):'));
+          let messageElement;
           for (let i=0; i< payload.commands.length;i++) {
-            let messageElement = $('<li>').text(payload.commands[i]).css({marginLeft: '10px'});
+            messageElement = $('<li>').text(payload.commands[i]).css({marginLeft: '10px'});
             $('#messages').append(messageElement);
-          }       
+          }
+          let topOffset = messageElement.position().top;
+          $('#messages').animate({scrollTop: topOffset});       
         }
       });
 
       socket.on('rps', function(payload) {
-        console.log('rps!', payload);
+        let messageElement;
         if (payload.broadcast) {
-          let messageElement = $('<li>').text(payload.message).css({color: 'green'});
+          messageElement = $('<li>').text(payload.message).css({color: 'green'});
           $('#messages').append(messageElement);
         }
         else if (payload.id === myId) {
-          let messageElement = $('<li>').text(payload.message).css({color: 'green'});
+          messageElement = $('<li>').text(payload.message).css({color: 'green'});
           $('#messages').append(messageElement);
         }
+        let topOffset = messageElement.position().top;
+        $('#messages').animate({scrollTop: topOffset});
       });
 
       socket.on('warning', function(payload) {
         if (payload.id === myId) {
           let messageElement = $('<li>').text(payload.warning).css({color: 'red'});
           $('#messages').append(messageElement);
+          let topOffset = messageElement.position().top;
+          $('#messages').animate({scrollTop: topOffset});
         }
       });
 
