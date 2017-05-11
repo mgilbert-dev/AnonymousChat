@@ -12,6 +12,7 @@
 - Notifications for users that are currently tabbed out.
 - Clicking on a user's name prefills message with a whisper.
 - Users notified when others connect/disconnect.
+- Adding plugins! Currently users can play Rock, Paper, Scissors through command line
 
 ### Limitations
 
