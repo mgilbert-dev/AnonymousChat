@@ -46,35 +46,38 @@
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
     $(function() {
-      var inputForm = $('form input');
+      let inputForm = $('form input');
       if (Notification.permission !== "granted") {
         Notification.requestPermission(function(permission) {
           if (permission === "granted") {
-            var notification = new Notification("Notifications enabled. Will only display if window is tabbed out.");
+            let notification = new Notification("Notifications enabled. Will only display if window is tabbed out.");
           }
         })
       }
       inputForm.focus();
-      var socket = io();
-      var myInterval;
-      var myName = 'Anonymous-user';
-      var myId = makeId();
-      var myColor = 'limegreen';
+      let socket = io();
+      let myInterval;
+
+      let myUser = {
+        name: 'Anonymous-user',
+        id: makeId(),
+        color: 'limegreen'
+      };
 
       function spawnNotification(theBody,theIcon,theTitle) {
-        var options = {
+        let options = {
             body: theBody,
             icon: theIcon
         }
-        var n = new Notification(theTitle,options);
+        let n = new Notification(theTitle,options);
       }
 
-      socket.emit('user connected', myId);
+      socket.emit('user connected', myUser.id);
 
       $('form').submit(function() {
         socket.emit('chat message', {
           message: $('#m').val(),
-          id: myId
+          id: myUser.id
         });
         $('#m').val('');
         return false;
@@ -103,7 +106,7 @@
             if ($(`#${user}`)) {
               $(`#${user}`).remove();
             }
-            var element = $("<li id='" + user + "'>" + users[user].name + "</li>");
+            let element = $("<li id='" + user + "'>" + users[user].name + "</li>");
             element.css({
               cursor: 'pointer'
             });
@@ -126,10 +129,10 @@
       });
 
       socket.on('whisper', function(payload) {
-        if (payload.targetUsers.some(el => el === myId) || payload.id === myId) {
+        if (payload.targetUsers.some(el => el === myUser.id) || payload.id === myUser.id) {
           let messageElement = $('<li>').text(payload.message);
           
-          if (payload.id != myId) {
+          if (payload.id != myUser.id) {
             spawnNotification(payload.message, 'https://maxcdn.icons8.com/Share/icon/Messaging//message_outline1600.png','New whisper!');
             messageElement.css({
                 color: 'red',
@@ -152,22 +155,22 @@
 
       $('#m').keydown(function(e) {
         socket.emit('user typing', {
-          name: myName,
-          id: myId,
+          name: myUser.name,
+          id: myUser.id,
           key: e.key
         });
       });
 
       $('#m').keyup(function() {
         socket.emit('user stop typing', {
-          name: myName,
-          id: myId
+          name: myUser.name,
+          id: myUser.id
         });
       });
 
       socket.on('user typing', function(payload) {
         
-        if (payload.id !== myId) {
+        if (payload.id !== myUser.id) {
           $('#typing-status').text(payload.name + ' is typing...');
           window.clearInterval(myInterval);
           let topOffset = $('#typing-status').position().top;
@@ -176,7 +179,7 @@
       });
 
       socket.on('user stop typing', function(payload) {
-        if (payload.id !== myId) {
+        if (payload.id !== myUser.id) {
           myInterval = window.setTimeout(function() {
             $('#typing-status').text('');
           },2000);
@@ -188,13 +191,13 @@
         $('#messages').append(messageElement);
         let topOffset = messageElement.position().top;
         $('#messages').animate({scrollTop: topOffset});
-        myName = payload.users[myId].name;
+        myUser.name = payload.users[myUser.id].name;
         for (let user in payload.users) {
           if (payload.users.hasOwnProperty(user)) {
             if ($(`#${user}`)) {
               $(`#${user}`).remove();
             }
-            var element = $("<li id='" + user + "'>" + payload.users[user].name + "</li>");
+            let element = $("<li id='" + user + "'>" + payload.users[user].name + "</li>");
             element.css({
               cursor: 'pointer'
             });
@@ -212,7 +215,7 @@
       });
 
       socket.on('set color', function(payload) {
-        if (payload.id === myId) {
+        if (payload.id === myUser.id) {
           let messageElement = $('<li>').text(payload.message);
           $('#messages').append(messageElement);
           let topOffset = messageElement.position().top;
@@ -221,7 +224,7 @@
       });
 
       socket.on('list users', function(payload) {
-        if (payload.id === myId) {
+        if (payload.id === myUser.id) {
           let messageElement = $('<li>').text(payload.message);
           $('#messages').append(messageElement);
           let topOffset = messageElement.position().top;
@@ -230,7 +233,7 @@
       });
 
       socket.on('list commands', function(payload) {
-        if (payload.id === myId) {
+        if (payload.id === myUser.id) {
           $('#messages').append($('<li>').text('Available commands (use without quotes or brackets):'));
           let messageElement;
           for (let i=0; i< payload.commands.length;i++) {
@@ -248,7 +251,7 @@
           messageElement = $('<li>').text(payload.message).css({color: 'green'});
           $('#messages').append(messageElement);
         }
-        else if (payload.id === myId) {
+        else if (payload.id === myUser.id) {
           messageElement = $('<li>').text(payload.message).css({color: 'green'});
           $('#messages').append(messageElement);
         }
@@ -257,7 +260,7 @@
       });
 
       socket.on('warning', function(payload) {
-        if (payload.id === myId) {
+        if (payload.id === myUser.id) {
           let messageElement = $('<li>').text(payload.warning).css({color: 'red'});
           $('#messages').append(messageElement);
           let topOffset = messageElement.position().top;
@@ -266,10 +269,10 @@
       });
 
       function makeId() {
-        var text = "";
-        var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        let text = "";
+        let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-        for( var i=0; i < 5; i++ )
+        for( let i=0; i < 5; i++ )
             text += possible.charAt(Math.floor(Math.random() * possible.length));
 
         return text;
