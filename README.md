@@ -39,7 +39,8 @@ Plugins are now usable, and with an established contract that defines how plugin
 
 The first plugin (a game allowing the channel to engage in Rock, Paper, Scissors with each other) provides the first example:
 
-    const RockPaperScissors = require('./addons/RockPaperScissors.js');
+    #index.js
+    const RockPaperScissors = require('./plugins/RockPaperScissors.js');
 
     const plugins = {
       rps: {
@@ -51,6 +52,7 @@ The first plugin (a game allowing the channel to engage in Rock, Paper, Scissors
       }
     };
 
+    #RockPaperScissors.js
     class RockPaperScissors {
       constructor(reply) {
         this.currentGame = false;
