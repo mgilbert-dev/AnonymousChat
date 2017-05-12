@@ -37,6 +37,40 @@ Plugins are now usable, and with an established contract that defines how plugin
         The first argument will be a user object with the following: {name: String, id: String, color: String, lockedOut: Boolean, socketId: String}
         The second argument will be an array of commands, space delimited. E.g., the command '/plugin start game for 5 players' would yield an array of ['start', 'game', 'for', '5', 'players']
 
+The first plugin (a game allowing the channel to engage in Rock, Paper, Scissors with each other) provides the first example:
+
+    const RockPaperScissors = require('./addons/RockPaperScissors.js');
+
+    const plugins = {
+      rps: {
+        availableCommands: [
+          '\'/rps [number]\' - Initiates a game of \'Rock, Paper, Scissors\' with [number] open spots.', 
+          '\'/rps [action]\' - If a game has started, declare your action with \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'.'
+        ],
+        plugin: new RockPaperScissors((payload) => reply('rps', payload))
+      }
+    };
+
+    class RockPaperScissors {
+      constructor(reply) {
+        this.currentGame = false;
+        this.players = {
+
+        };
+        this.numPlayers = 0;
+        this.reply = reply;
+      }
+
+      receiveCommand(user, command) {
+          ...do something
+          this.reply({
+              message: 'You guys rock!',
+              broadcast: true,
+              styling: {
+                  color: 'DeepSkyBlue'
+              }
+          });
+      }
 
 ### Limitations
 
