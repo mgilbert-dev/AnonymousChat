@@ -1,10 +1,9 @@
 module.exports = class RockPaperScissors {
-  constructor(users, io) {
+  constructor(io) {
     this.currentGame = false;
     this.players = {
 
     };
-    this.users = users;
     this.numPlayers = 0;
     this.io = io;
   }
@@ -15,19 +14,19 @@ module.exports = class RockPaperScissors {
     };
 
     results.rock = Object.keys(this.players).filter(el => {
-      return this.players[el] === 'rock' || this.players[el] === 'r';
+      return this.players[el].action === 'rock' || this.players[el].action === 'r';
     })
-    .map(el => this.users[el].name);
+    .map(el => this.players[el].name);
 
     results.paper = Object.keys(this.players).filter(el => {
-      return this.players[el] === 'paper' || this.players[el] === 'p';
+      return this.players[el].action === 'paper' || this.players[el].action === 'p';
     })
-    .map(el => this.users[el].name);
+    .map(el => this.players[el].name);
 
     results.scissors = Object.keys(this.players).filter(el => {
-      return this.players[el] === 'scissors' || this.players[el] === 's';
+      return this.players[el].action === 'scissors' || this.players[el].action === 's';
     })
-    .map(el => this.users[el].name);
+    .map(el => this.players[el].name);
 
     return results;
   }
@@ -82,24 +81,19 @@ module.exports = class RockPaperScissors {
     return ['rock', 'paper', 'scissors', 'r', 'p', 's'].includes(action);
   }
 
-  isValidNumPlayers(numPlayers) {
-    return numPlayers <= Object.keys(this.users).length;
-  }
-
   resetGame() {
     this.currentGame = false;
     this.players = {};
     this.numPlayers = 0;
   }
 
-  resolveGame(user) {
+  resolveGame(uer) {
     let categories = this.categorizePlayers();
     let message = this.generateMessage(categories);
     
     this.resetGame();
     
     this.io.emit('rps', {
-      user: user,
       broadcast: true,
       message: message,
       styling: {
@@ -109,7 +103,9 @@ module.exports = class RockPaperScissors {
   }
 
   setPlayerAction(user, action) {
-    this.players[user.id] = action;
+    this.players[user.id] = this.players[user.id] || {};
+    this.players[user.id].action = action;
+    this.players[user.id].name = user.name;
   }
 
   startGame(numPlayers) {
@@ -126,7 +122,7 @@ module.exports = class RockPaperScissors {
         return this.emitWarning(user, 'Invalid action. Valid inputs are \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'');
       }
       if (this.isGameOver()) {
-        this.resolveGame(user);
+        this.resolveGame();
       }
       else {
         this.io.emit('rps', {
@@ -139,7 +135,7 @@ module.exports = class RockPaperScissors {
         });
       }
     }
-    else if (this.isValidNumPlayers(command)) {
+    else if (typeof parseInt(command) === 'number') {
       this.startGame(command);
       this.io.emit('rps', {
         user: user,

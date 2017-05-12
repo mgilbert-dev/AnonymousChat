@@ -12,7 +12,7 @@ let users = {
 };
 
 let plugins = {
-  rockPaperScissors: new RockPaperScissors(users, io)
+  rockPaperScissors: new RockPaperScissors(io)
 };
 
 io.on('connection', function(socket) {
