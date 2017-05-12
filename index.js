@@ -16,11 +16,11 @@ var activities = {
 
 io.on('connection', function(socket) {
 
-  socket.on('user connected', function(userId) {
-    users[userId] = {
-      name: 'Anonymous-user',
+  socket.on('user connected', function(user) {
+    users[user.id] = {
+      name: user.name,
       socketId: socket.id,
-      color: 'limegreen',
+      color: user.color,
       lockedOut: false
     };
     io.emit('user connected', users);
@@ -40,7 +40,7 @@ io.on('connection', function(socket) {
     }
     io.emit('user disconnected', {
       name: userName,
-      user: userId
+      userId: userId
     });
   });
 
@@ -50,25 +50,25 @@ io.on('connection', function(socket) {
     }
     else if (payload.message !== '') {
       io.emit('chat message', {
-        message: users[payload.id].name + ' says: ' + payload.message,
-        color: users[payload.id].color
+        message: users[payload.user.id].name + ' says: ' + payload.message,
+        color: users[payload.user.id].color
       });
     }
   });
 
   socket.on('user typing', function(payload) {
     if (payload.key === '/') {
-      users[payload.id].lockedOut = true;
+      users[payload.user.id].lockedOut = true;
       setTimeout(() => {
-        users[payload.id].lockedOut = false;
+        users[payload.user.id].lockedOut = false;
       },5000);
-    } else if (users[payload.id] && !users[payload.id].lockedOut) {
+    } else if (users[payload.user.id] && !users[payload.user.id].lockedOut) {
       io.emit('user typing', payload);
     }
   });
 
-  socket.on('user stop typing', function(msg) {
-    io.emit('user stop typing', msg);
+  socket.on('user stop typing', function(payload) {
+    io.emit('user stop typing', payload);
   });
 });
 
@@ -79,23 +79,23 @@ http.listen(process.env.PORT || 5000, function() {
 function handleCommand(payload) {
   let operation = payload.message.split(' ')[0];
   let argument = payload.message.split(' ')[1];
-  users[payload.id].lockedOut = false;
+  users[payload.user.id].lockedOut = false;
   switch (operation) {
     case '/name':
-      var previousName = users[payload.id].name;
-      users[payload.id].name = argument;
+      var previousName = users[payload.user.id].name;
+      users[payload.user.id].name = argument;
       io.emit('set name', {
         message: previousName + ' changed their name to ' + argument + '.',
         users: users,
-        id: payload.id
+        id: payload.user.id
       });
       break;
 
     case '/color':
-      users[payload.id].color = argument;
+      users[payload.user.id].color = argument;
       io.emit('set color', {
         message: 'You changed your color to ' + argument + '.',
-        id: payload.id
+        id: payload.user.id
       });
       break;
 
@@ -104,11 +104,11 @@ function handleCommand(payload) {
         let targetUsers = Object.keys(users).filter(el => {
           return users[el].name === argument;
         });
-        let sender = users[payload.id].name;
+        let sender = users[payload.user.id].name;
         let message = payload.message.substr(payload.message.indexOf(payload.message.split(' ')[2]));
         io.emit('whisper', {
           message: sender + ' > ' + argument + ': ' + message,
-          id: payload.id,
+          id: payload.user.id,
           targetUsers: targetUsers
         });
       }
@@ -126,18 +126,18 @@ function handleCommand(payload) {
       }).join(' ');
       io.emit('list users', {
         message: 'Users in room: ' + userList,
-        id: payload.id
+        id: payload.user.id
       });
       break;
 
     case '/rps':
-      activities.rockPaperScissors.takeCommand(payload.id, argument);
+      activities.rockPaperScissors.takeCommand(payload.user.id, argument);
       break;
 
     case '/commands':
       io.emit('list commands', {
         commands: ['\'/name [name]\' - change your name.', '\'/color [color]\' - change your font color.', '\'/users\' - List users in room.', '\'/whisper [name] [message]\' - Directly message everyone with that name.','\'/rps [number]\' - Initiates a game of \'Rock, Paper, Scissors\' with [number] open spots.', '\'/rps [action]\' - If a game has started, declare your action with \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'.'],
-        id: payload.id
+        id: payload.user.id
       });
       break;
     default:

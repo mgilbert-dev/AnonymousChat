@@ -72,12 +72,12 @@
         let n = new Notification(theTitle,options);
       }
 
-      socket.emit('user connected', myUser.id);
+      socket.emit('user connected', myUser);
 
       $('form').submit(function() {
         socket.emit('chat message', {
           message: $('#m').val(),
-          id: myUser.id
+          user: myUser
         });
         $('#m').val('');
         return false;
@@ -125,7 +125,7 @@
         $('#messages').append(messageElement);
         let topOffset = messageElement.position().top;
         $('#messages').animate({scrollTop: topOffset});
-        $(`#${payload.user}`).remove();
+        $(`#${payload.userId}`).remove();
       });
 
       socket.on('whisper', function(payload) {
@@ -155,23 +155,21 @@
 
       $('#m').keydown(function(e) {
         socket.emit('user typing', {
-          name: myUser.name,
-          id: myUser.id,
+          user: myUser,
           key: e.key
         });
       });
 
       $('#m').keyup(function() {
         socket.emit('user stop typing', {
-          name: myUser.name,
-          id: myUser.id
+          user: myUser
         });
       });
 
       socket.on('user typing', function(payload) {
         
-        if (payload.id !== myUser.id) {
-          $('#typing-status').text(payload.name + ' is typing...');
+        if (payload.user.id !== myUser.id) {
+          $('#typing-status').text(payload.user.name + ' is typing...');
           window.clearInterval(myInterval);
           let topOffset = $('#typing-status').position().top;
           $('#messages').animate({scrollTop: topOffset});
@@ -179,7 +177,7 @@
       });
 
       socket.on('user stop typing', function(payload) {
-        if (payload.id !== myUser.id) {
+        if (payload.user.id !== myUser.id) {
           myInterval = window.setTimeout(function() {
             $('#typing-status').text('');
           },2000);
