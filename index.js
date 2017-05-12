@@ -11,7 +11,7 @@ let users = {
 
 };
 
-let activities = {
+let plugins = {
   rockPaperScissors: new RockPaperScissors(users, io)
 };
 
@@ -169,7 +169,7 @@ function handleCommand(payload) {
       break;
 
     case '/rps':
-      activities.rockPaperScissors.takeCommand(payload.user, argument);
+      plugins.rockPaperScissors.takeCommand(payload.user, argument);
       break;
 
     case '/commands':
