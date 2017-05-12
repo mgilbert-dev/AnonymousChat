@@ -14,6 +14,30 @@
 - Users notified when others connect/disconnect.
 - Adding plugins! Currently users can play Rock, Paper, Scissors through command line
 
+### Plugins
+Plugins are now usable, and with an established contract that defines how plugins can interact through the server with users in the channel. By adding the following key-values to the plugin object at the beginning of the file, and creating a class method called 'receiveCommand()' that takes two arguments (the user issuing the command, and an array of commands), the app integrates its available commands with those displayed to users when they request for a list of commands, directs commands prefixed with the plugin's key to the plugin.receiveCommand() function mentioned above, and initializes the plugin with a function that that if called inside the plugin, emits a payload to the users in a channel. The plugin has power over who receives the message and the CSS styling of it). Below is the aforementioned contract.
+
+      Integration: Add plugin to plugins object as follows:
+
+        [key]: {
+          availableCommands: ['\'/key [command]\' - [what happens]', etc],
+          plugin: new Plugin((payload) => reply(key, payload))
+        }
+    
+        Replace each occurrence of 'key' with a shorthand for your plugin, and anything inside square brackets with anything you want (not to confuse with the outer square brackets, indicating an array)
+        Replace 'Plugin' with the plugin class
+
+      Initialization: Initialized with a function that takes a payload and sends it to the channel.
+        Payload schema: { message: required String, styling: optional Object, user: optional Object, broadcast: optional Boolean }
+          payload.styling must follow jQuery syntax ({camelCase: 'string'})
+          payload.user is used to filter the message to a specific user
+          payload.broadcast bypasses the above and displays the message to the channel
+
+      Receiving inputs: Commands will be issued through a class method Plugin.receiveCommand(user, command).
+        The first argument will be a user object with the following: {name: String, id: String, color: String, lockedOut: Boolean, socketId: String}
+        The second argument will be an array of commands, space delimited. E.g., the command '/plugin start game for 5 players' would yield an array of ['start', 'game', 'for', '5', 'players']
+
+
 ### Limitations
 
 - Chrome notification API doesn't seem to work in full screen. Notifications also don't always trigger immediately.
