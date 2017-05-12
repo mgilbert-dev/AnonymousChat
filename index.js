@@ -23,7 +23,10 @@ io.on('connection', function(socket) {
       color: user.color,
       lockedOut: false
     };
-    io.emit('user connected', users);
+    io.emit('update users', {
+      users: users,
+      message: `${user.name} connected`
+    });
   });
 
   socket.on('disconnect', function(){
@@ -38,9 +41,9 @@ io.on('connection', function(socket) {
         }
       }
     }
-    io.emit('user disconnected', {
-      name: userName,
-      userId: userId
+    io.emit('update users', {
+      users: users,
+      message: `${userName} disconnected`
     });
   });
 
@@ -84,18 +87,17 @@ function handleCommand(payload) {
     case '/name':
       var previousName = users[payload.user.id].name;
       users[payload.user.id].name = argument;
-      io.emit('set name', {
-        message: previousName + ' changed their name to ' + argument + '.',
+      io.emit('update users', {
         users: users,
-        id: payload.user.id
+        message: `${previousName} changed their name to ${argument}.`
       });
       break;
 
     case '/color':
       users[payload.user.id].color = argument;
-      io.emit('set color', {
-        message: 'You changed your color to ' + argument + '.',
-        id: payload.user.id
+      io.emit('update users', {
+        users: users,
+        message: `${users[payload.user.id].name} changed their color to ${argument}.`
       });
       break;
 

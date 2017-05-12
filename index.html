@@ -13,9 +13,7 @@
       #messages { display: flex; flex-direction: column; list-style-type: none; margin: 0; padding: 0; max-width: 80vw; height: 90vh; overflow: auto}
       #messages li { padding: 5px 10px; font-size: 16px; background:transparent; color: white }
       #typing-status { padding: 5px 10px; order: 1; color: white;}
-      #users { list-style-type: none; overflow-y: scroll; position: fixed; height: 100%; width: 20vw; right: 0; top: 0; background: transparent; color: limegreen}
-      #users li:nth-child(2n + 3) {background: #94eaba; color: black; }
-      #users li:nth-child(even) {background: #eab1b1; color: black;}
+      #users { list-style-type: none; overflow-y: scroll; position: fixed; height: 100%; width: 20vw; right: 0; top: 0; background: transparent;}
       #users li { margin: 10px; padding: 5px; text-align: center; border-radius: 5px }
       ::-webkit-scrollbar { width: 0px; background: transparent }
       @media screen and (max-device-width: 480px) {
@@ -96,36 +94,26 @@
         }
       });
 
-      socket.on('user connected', function(users) {
-        let messageElement = $('<li>').text('Anonymous user connected');
+      socket.on('update users', function(payload) {
+        let messageElement = $('<li>').text(payload.message);
         $('#messages').append(messageElement);
         let topOffset = messageElement.position().top;
         $('#messages').animate({scrollTop: topOffset});
-        for (let user in users) {
-          if (users.hasOwnProperty(user)) {
-            if ($(`#${user}`)) {
-              $(`#${user}`).remove();
-            }
-            let element = $("<li id='" + user + "'>" + users[user].name + "</li>");
+        $('#users li').remove();
+        for (let user in payload.users) {
+          if (payload.users.hasOwnProperty(user)) {
+            let element = $("<li id='" + user + "'>" + payload.users[user].name + "</li>");
             element.css({
-              cursor: 'pointer'
+              cursor: 'pointer',
+              color: payload.users[user].color
             });
             element.click(function(e) {
-              $('form input').val('/whisper ' + users[user].name + ' ');
+              $('form input').val('/whisper ' + payload.users[user].name + ' ');
                $('form input').focus();
             })
             $('#users').append(element);
           }
         }
-      });
-
-      socket.on('user disconnected', function(payload) {
-        $('#typing-status').text('');
-        let messageElement = $('<li>').text(payload.name + ' disconnected');
-        $('#messages').append(messageElement);
-        let topOffset = messageElement.position().top;
-        $('#messages').animate({scrollTop: topOffset});
-        $(`#${payload.userId}`).remove();
       });
 
       socket.on('whisper', function(payload) {
@@ -181,43 +169,6 @@
           myInterval = window.setTimeout(function() {
             $('#typing-status').text('');
           },2000);
-        }
-      });
-
-      socket.on('set name', function(payload) {
-        let messageElement = $('<li>').text(payload.message);
-        $('#messages').append(messageElement);
-        let topOffset = messageElement.position().top;
-        $('#messages').animate({scrollTop: topOffset});
-        myUser.name = payload.users[myUser.id].name;
-        for (let user in payload.users) {
-          if (payload.users.hasOwnProperty(user)) {
-            if ($(`#${user}`)) {
-              $(`#${user}`).remove();
-            }
-            let element = $("<li id='" + user + "'>" + payload.users[user].name + "</li>");
-            element.css({
-              cursor: 'pointer'
-            });
-
-            element.click(function(e) {
-              $('form input').val('/whisper ' + payload.users[user].name + ' ');
-               $('form input').focus();
-            })
-
-            $('#users').append(element);
-            let topOffset = element.position().top;
-            $('#messages').animate({scrollTop: topOffset});
-          }
-        }
-      });
-
-      socket.on('set color', function(payload) {
-        if (payload.id === myUser.id) {
-          let messageElement = $('<li>').text(payload.message);
-          $('#messages').append(messageElement);
-          let topOffset = messageElement.position().top;
-          $('#messages').animate({scrollTop: topOffset});
         }
       });
 
