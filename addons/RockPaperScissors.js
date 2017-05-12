@@ -1,11 +1,11 @@
 module.exports = class RockPaperScissors {
-  constructor(io) {
+  constructor(reply) {
     this.currentGame = false;
     this.players = {
 
     };
     this.numPlayers = 0;
-    this.io = io;
+    this.reply = reply;
   }
 
   categorizePlayers() {
@@ -54,8 +54,8 @@ module.exports = class RockPaperScissors {
   }
 
   emitWarning(user, message) {
-    this.io.emit('warning', {
-      warning: message,
+    this.reply({
+      message: message,
       user: user,
       styling: {
         color: 'red'
@@ -69,7 +69,7 @@ module.exports = class RockPaperScissors {
     let rockPlayers = this.constructMessagePart(categories.rock)|| "nobody";
     let scissorsPlayers = this.constructMessagePart(categories.scissors)|| "nobody";
 
-    message += `Playing as rock, ${rockPlayers} beat ${scissorsPlayers}. Playing as paper, ${paperPlayers} beat ${rockPlayers}. And playing as scissors, ${scissorsPlayers} beat ${paperPlayers}.`;
+    message += `Playing rock, ${rockPlayers} beat ${scissorsPlayers}. Playing paper, ${paperPlayers} beat ${rockPlayers}. And playing scissors, ${scissorsPlayers} beat ${paperPlayers}.`;
     return message;
   }
 
@@ -93,7 +93,7 @@ module.exports = class RockPaperScissors {
     
     this.resetGame();
     
-    this.io.emit('rps', {
+    this.reply({
       broadcast: true,
       message: message,
       styling: {
@@ -113,7 +113,8 @@ module.exports = class RockPaperScissors {
     this.numPlayers = parseInt(numPlayers);
   }
 
-  takeCommand(user, command) {
+  receiveCommand(user, command) {
+    command = command[0];
     if (this.currentGame) {
       if (this.isValidAction(command)) {
         this.setPlayerAction(user, command);     
@@ -125,7 +126,7 @@ module.exports = class RockPaperScissors {
         this.resolveGame();
       }
       else {
-        this.io.emit('rps', {
+        this.reply({
           user: user,
           broadcast: true,
           message: `${user.name} has submitted their decision. ${this.numPlayers - Object.keys(this.players).length} spot(s) left.`,
@@ -135,9 +136,9 @@ module.exports = class RockPaperScissors {
         });
       }
     }
-    else if (typeof parseInt(command) === 'number') {
+    else if (command >>> 0 === parseFloat(command)) {
       this.startGame(command);
-      this.io.emit('rps', {
+      this.reply({
         user: user,
         broadcast: true,
         message: `${user.name} has started a game of \'Rock, Paper, Scissors\', and initiated it to ${command} players. The game will resolve once ${command} players have submitted their choice. Type \'/commands\' for instructions.`,
@@ -147,7 +148,7 @@ module.exports = class RockPaperScissors {
       });
     }
     else {
-      return this.emitWarning(user, 'The game has either already been initiated or you didn\'t enter a number smaller than the number of users in the room');
+      return this.emitWarning(user, 'The game has either already been initiated or you didn\'t enter a positive integer');
     }
   }
 };

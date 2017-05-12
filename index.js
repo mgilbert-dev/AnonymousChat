@@ -11,12 +11,65 @@ let users = {
 
 };
 
-let plugins = {
-  rockPaperScissors: new RockPaperScissors(io)
+const reply = (pluginCode, payload) => {
+  if (payload.message) {
+    if (!payload.styling) {
+      payload.styling = {color: 'white'};
+    }
+    io.emit(pluginCode, payload);
+  }
+  else {
+    throw "Payload must at least contain a message";
+  }
+};
+
+const allCommands = (basicCommands) => {
+  Object.keys(plugins).forEach(plugin => {
+    basicCommands = basicCommands.concat(plugins[plugin].availableCommands);
+  });
+  return basicCommands;
+};
+
+let basicCommands = [
+  '\'/name [name]\' - change your name.', 
+  '\'/color [color]\' - change your font color.', 
+  '\'/users\' - List users in room.', 
+  '\'/whisper [name] [message]\' - Directly message everyone with that name.'
+];
+
+/* PLUGIN CONTRACT
+  Integration: Add plugin to plugins object as follows:
+
+    [key]: {
+      availableCommands: ['\'/key [command]\' - [what happens]', etc],
+      plugin: new Plugin((payload) => reply(key, payload))
+    }
+    
+    Replace each occurrence of 'key' with a shorthand for your plugin, and anything inside square brackets with anything you want (not to confuse with the outer square brackets, indicating an array)
+    Replace 'Plugin' with the plugin class
+
+  Initialization: Initialized with a function that takes a payload and sends it to the channel.
+    Payload schema: { message: required String, styling: optional Object, user: optional Object, broadcast: optional Boolean }
+      payload.styling must follow jQuery syntax ({camelCase: 'string'})
+      payload.user is used to filter the message to a specific user
+      payload.broadcast bypasses the above and displays the message to the channel
+
+  Receiving inputs: Commands will be issued through a class method Plugin.receiveCommand(user, command).
+    The first argument will be a user object with the following: {name: String, id: String, color: String, lockedOut: Boolean, socketId: String}
+    The second argument will be an array of commands, space delimited. E.g., the command '/plugin start game for 5 players' would yield an array of ['start', 'game', 'for', '5', 'players']
+*/
+
+const plugins = {
+  rps: {
+    availableCommands: [
+      '\'/rps [number]\' - Initiates a game of \'Rock, Paper, Scissors\' with [number] open spots.', 
+      '\'/rps [action]\' - If a game has started, declare your action with \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'.'
+    ],
+    plugin: new RockPaperScissors((payload) => reply('rps', payload))
+  }
 };
 
 io.on('connection', function(socket) {
-
   socket.on('user connected', function(payload) {
     users[payload.user.id] = {
       name: payload.user.name,
@@ -103,17 +156,17 @@ http.listen(process.env.PORT || 5000, function() {
 
 function handleCommand(payload) {
   let operation = payload.message.split(' ')[0];
-  let argument = payload.message.split(' ')[1];
+  let args = payload.message.substring(operation.length + 1).split(' ');
   users[payload.user.id].lockedOut = false;
 
   switch (operation) {
 
     case '/name':
       let previousName = users[payload.user.id].name;
-      users[payload.user.id].name = argument;
+      users[payload.user.id].name = args[0];
       io.emit('update users', {
         users: users,
-        message: `${previousName} changed their name to ${argument}.`,
+        message: `${previousName} changed their name to ${args.join(' ')}.`,
         styling: {
           color: payload.user.color
         },
@@ -122,12 +175,12 @@ function handleCommand(payload) {
       break;
 
     case '/color':
-      users[payload.user.id].color = argument;
+      users[payload.user.id].color = args[0];
       io.emit('update users', {
         users: users,
-        message: `${users[payload.user.id].name} changed their color to ${argument}.`,
+        message: `${users[payload.user.id].name} changed their color to ${args[0]}.`,
         styling: {
-          color: argument
+          color: args[0]
         },
         broadcast: true
       });
@@ -136,12 +189,12 @@ function handleCommand(payload) {
     case '/whisper':
       if (payload.message.indexOf(payload.message.split(' ')[2]) > 0) {
         let targetUsers = Object.keys(users).filter(el => {
-          return users[el].name === argument;
+          return users[el].name === args[0];
         });
         let sender = users[payload.user.id].name;
-        let message = payload.message.substr(payload.message.indexOf(payload.message.split(' ')[2]));
+        let message = args.slice(1).join(' ');
         io.emit('whisper', {
-          message: sender + ' > ' + argument + ': ' + message,
+          message: sender + ' > ' + args[0] + ': ' + message,
           user: payload.user,
           targetUsers: targetUsers
         });
@@ -168,13 +221,9 @@ function handleCommand(payload) {
       });
       break;
 
-    case '/rps':
-      plugins.rockPaperScissors.takeCommand(payload.user, argument);
-      break;
-
     case '/commands':
       io.emit('list commands', {
-        commands: ['\'/name [name]\' - change your name.', '\'/color [color]\' - change your font color.', '\'/users\' - List users in room.', '\'/whisper [name] [message]\' - Directly message everyone with that name.','\'/rps [number]\' - Initiates a game of \'Rock, Paper, Scissors\' with [number] open spots.', '\'/rps [action]\' - If a game has started, declare your action with \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'.'],
+        commands: allCommands(basicCommands),
         user: payload.user,
         styling: {
           marginLeft: '10px'
@@ -182,6 +231,14 @@ function handleCommand(payload) {
       });
       break;
     default:
+      for (let plugin in plugins) {
+        if (plugins.hasOwnProperty(plugin)) {
+          if (operation.substring(1) === plugin) {
+            plugins[plugin].plugin.receiveCommand(payload.user, args);
+            return false;
+          }
+        }
+      }
   }
 }
 
