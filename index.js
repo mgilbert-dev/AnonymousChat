@@ -1,31 +1,37 @@
-var app = require('express')();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var RockPaperScissors = require('./addons/RockPaperScissors.js');
+const app = require('express')();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+const RockPaperScissors = require('./addons/RockPaperScissors.js');
+
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html');
 });
 
-var users = {
+let users = {
 
 };
 
-var activities = {
+let activities = {
   rockPaperScissors: new RockPaperScissors(users, io)
 };
 
 io.on('connection', function(socket) {
 
-  socket.on('user connected', function(user) {
-    users[user.id] = {
-      name: user.name,
+  socket.on('user connected', function(payload) {
+    users[payload.user.id] = {
+      name: payload.user.name,
       socketId: socket.id,
-      color: user.color,
-      lockedOut: false
+      color: payload.user.color,
+      lockedOut: false,
+      id: payload.user.id
     };
     io.emit('update users', {
       users: users,
-      message: `${user.name} connected`
+      message: `${payload.user.name} connected`,
+      styling: {
+        color: payload.user.color
+      },
+      broadcast: true
     });
   });
 
@@ -43,7 +49,11 @@ io.on('connection', function(socket) {
     }
     io.emit('update users', {
       users: users,
-      message: `${userName} disconnected`
+      message: `${userName} disconnected`,
+      styling: {
+        color: 'white'
+      },
+      broadcast: true
     });
   });
 
@@ -53,25 +63,37 @@ io.on('connection', function(socket) {
     }
     else if (payload.message !== '') {
       io.emit('chat message', {
-        message: users[payload.user.id].name + ' says: ' + payload.message,
-        color: users[payload.user.id].color
+        message: users[payload.user.id].name + ': ' + payload.message,
+        styling: {
+          color: payload.user.color
+        },
+        broadcast: true
       });
     }
   });
 
   socket.on('user typing', function(payload) {
+    
     if (payload.key === '/') {
       users[payload.user.id].lockedOut = true;
       setTimeout(() => {
         users[payload.user.id].lockedOut = false;
       },5000);
     } else if (users[payload.user.id] && !users[payload.user.id].lockedOut) {
-      io.emit('user typing', payload);
+      io.emit('user typing', {
+        user: payload.user,
+        message: `${payload.user.name} is typing...`,
+        styling: {
+          color: 'white'
+        }
+      });
     }
   });
 
   socket.on('user stop typing', function(payload) {
-    io.emit('user stop typing', payload);
+    io.emit('user stop typing', {
+      user: payload.user
+    });
   });
 });
 
@@ -83,13 +105,19 @@ function handleCommand(payload) {
   let operation = payload.message.split(' ')[0];
   let argument = payload.message.split(' ')[1];
   users[payload.user.id].lockedOut = false;
+
   switch (operation) {
+
     case '/name':
-      var previousName = users[payload.user.id].name;
+      let previousName = users[payload.user.id].name;
       users[payload.user.id].name = argument;
       io.emit('update users', {
         users: users,
-        message: `${previousName} changed their name to ${argument}.`
+        message: `${previousName} changed their name to ${argument}.`,
+        styling: {
+          color: payload.user.color
+        },
+        broadcast: true
       });
       break;
 
@@ -97,7 +125,11 @@ function handleCommand(payload) {
       users[payload.user.id].color = argument;
       io.emit('update users', {
         users: users,
-        message: `${users[payload.user.id].name} changed their color to ${argument}.`
+        message: `${users[payload.user.id].name} changed their color to ${argument}.`,
+        styling: {
+          color: argument
+        },
+        broadcast: true
       });
       break;
 
@@ -110,7 +142,7 @@ function handleCommand(payload) {
         let message = payload.message.substr(payload.message.indexOf(payload.message.split(' ')[2]));
         io.emit('whisper', {
           message: sender + ' > ' + argument + ': ' + message,
-          id: payload.user.id,
+          user: payload.user,
           targetUsers: targetUsers
         });
       }
@@ -126,29 +158,36 @@ function handleCommand(payload) {
           return users[el].name + '.';
         }
       }).join(' ');
+      
       io.emit('list users', {
         message: 'Users in room: ' + userList,
-        id: payload.user.id
+        user: payload.user,
+        styling: {
+          color: 'white'
+        }
       });
       break;
 
     case '/rps':
-      activities.rockPaperScissors.takeCommand(payload.user.id, argument);
+      activities.rockPaperScissors.takeCommand(payload.user, argument);
       break;
 
     case '/commands':
       io.emit('list commands', {
         commands: ['\'/name [name]\' - change your name.', '\'/color [color]\' - change your font color.', '\'/users\' - List users in room.', '\'/whisper [name] [message]\' - Directly message everyone with that name.','\'/rps [number]\' - Initiates a game of \'Rock, Paper, Scissors\' with [number] open spots.', '\'/rps [action]\' - If a game has started, declare your action with \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'.'],
-        id: payload.user.id
+        user: payload.user,
+        styling: {
+          marginLeft: '10px'
+        }
       });
       break;
     default:
   }
 }
 
-function emitWarning(message, userId) {
+function emitWarning(message, user) {
   io.emit('warning', {
     warning: message,
-    id: userId
+    user: user
   });
 }

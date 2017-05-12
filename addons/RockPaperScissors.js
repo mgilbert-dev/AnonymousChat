@@ -54,10 +54,13 @@ module.exports = class RockPaperScissors {
     return messagePart;
   }
 
-  emitWarning(id, message) {
+  emitWarning(user, message) {
     this.io.emit('warning', {
       warning: message,
-      id: id
+      user: user,
+      styling: {
+        color: 'red'
+      }
     });
   }
 
@@ -89,21 +92,24 @@ module.exports = class RockPaperScissors {
     this.numPlayers = 0;
   }
 
-  resolveGame(id) {
+  resolveGame(user) {
     let categories = this.categorizePlayers();
     let message = this.generateMessage(categories);
     
     this.resetGame();
     
     this.io.emit('rps', {
-      id: id,
+      user: user,
       broadcast: true,
-      message: message
+      message: message,
+      styling: {
+        color: 'deepskyblue'
+      }
     });
   }
 
-  setPlayerAction(id, action) {
-    this.players[id] = action;
+  setPlayerAction(user, action) {
+    this.players[user.id] = action;
   }
 
   startGame(numPlayers) {
@@ -111,35 +117,41 @@ module.exports = class RockPaperScissors {
     this.numPlayers = parseInt(numPlayers);
   }
 
-  takeCommand(id, command) {
+  takeCommand(user, command) {
     if (this.currentGame) {
       if (this.isValidAction(command)) {
-        this.setPlayerAction(id, command);     
+        this.setPlayerAction(user, command);     
       }
       else {
-        return this.emitWarning(id, 'Invalid action. Valid inputs are \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'');
+        return this.emitWarning(user, 'Invalid action. Valid inputs are \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'');
       }
       if (this.isGameOver()) {
-        this.resolveGame(id);
+        this.resolveGame(user);
       }
       else {
         this.io.emit('rps', {
-          id: id,
+          user: user,
           broadcast: true,
-          message: `${this.users[id].name} has submitted their decision. ${this.numPlayers - Object.keys(this.players).length} spots left.`
+          message: `${user.name} has submitted their decision. ${this.numPlayers - Object.keys(this.players).length} spot(s) left.`,
+          styling: {
+            color: 'deepskyblue'
+          }
         });
       }
     }
     else if (this.isValidNumPlayers(command)) {
       this.startGame(command);
       this.io.emit('rps', {
-        id: id,
+        user: user,
         broadcast: true,
-        message: `${this.users[id].name} has started a game of \'Rock, Paper, Scissors\', and initiated it to ${command} players. The game will resolve once ${command} players have submitted their choice. Type \'/commands\' for instructions.`
+        message: `${user.name} has started a game of \'Rock, Paper, Scissors\', and initiated it to ${command} players. The game will resolve once ${command} players have submitted their choice. Type \'/commands\' for instructions.`,
+        styling: {
+          color: 'deepskyblue'
+        }
       });
     }
     else {
-      return this.emitWarning(id, 'The game has either already been initiated or you didn\'t enter a number smaller than the number of users in the room');
+      return this.emitWarning(user, 'The game has either already been initiated or you didn\'t enter a number smaller than the number of users in the room');
     }
   }
 };

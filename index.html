@@ -43,190 +43,192 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
-    $(function() {
-      let inputForm = $('form input');
-      if (Notification.permission !== "granted") {
-        Notification.requestPermission(function(permission) {
-          if (permission === "granted") {
-            let notification = new Notification("Notifications enabled. Will only display if window is tabbed out.");
-          }
-        })
-      }
-      inputForm.focus();
-      let socket = io();
-      let myInterval;
-
-      let myUser = {
-        name: 'Anonymous-user',
-        id: makeId(),
-        color: 'limegreen'
-      };
-
-      function spawnNotification(theBody,theIcon,theTitle) {
-        let options = {
-            body: theBody,
-            icon: theIcon
+      $(function() {
+        let inputForm = $('form input');
+        if (Notification.permission !== "granted") {
+          Notification.requestPermission(function(permission) {
+            if (permission === "granted") {
+              let notification = new Notification("Notifications enabled. Will only display if window is tabbed out.");
+            }
+          })
         }
-        let n = new Notification(theTitle,options);
-      }
+        inputForm.focus();
+        let socket = io();
+        let myInterval;
 
-      socket.emit('user connected', myUser);
+        let myUser = {
+          name: 'Anonymous-user',
+          id: makeId(),
+          color: 'limegreen'
+        };
 
-      $('form').submit(function() {
-        socket.emit('chat message', {
-          message: $('#m').val(),
+        function spawnNotification(body, icon, title) {
+          let options = {
+            body: body,
+            icon: icon
+          }
+          let n = new Notification(title, options);
+        }
+
+        socket.emit('user connected', {
           user: myUser
         });
-        $('#m').val('');
-        return false;
-      });
 
-      socket.on('chat message', function(payload) {
-        if (payload.message !== '') {
+        $('form').submit(function() {
+          socket.emit('chat message', {
+            message: $('#m').val(),
+            user: myUser
+          });
+          $('#m').val('');
+          return false;
+        });
+
+        $('#m').keydown(function(e) {
+          socket.emit('user typing', {
+            user: myUser,
+            key: e.key
+          });
+        });
+
+        $('#m').keyup(function() {
+          socket.emit('user stop typing', {
+            user: myUser
+          });
+        });
+
+        socket.on('chat message', function(payload) {
           $('#typing-status').text('');
-          let messageElement = $('<li>').text(payload.message);
-          messageElement.css({ 
-              color: payload.color
-            });
-          $('#messages').append(messageElement);
-          let topOffset = messageElement.position().top;
-          $('#messages').animate({scrollTop: topOffset});
-        }
-      });
-
-      socket.on('update users', function(payload) {
-        let messageElement = $('<li>').text(payload.message);
-        $('#messages').append(messageElement);
-        let topOffset = messageElement.position().top;
-        $('#messages').animate({scrollTop: topOffset});
-        $('#users li').remove();
-        for (let user in payload.users) {
-          if (payload.users.hasOwnProperty(user)) {
-            let element = $("<li id='" + user + "'>" + payload.users[user].name + "</li>");
-            element.css({
-              cursor: 'pointer',
-              color: payload.users[user].color
-            });
-            element.click(function(e) {
-              $('form input').val('/whisper ' + payload.users[user].name + ' ');
-               $('form input').focus();
-            })
-            $('#users').append(element);
+          if (payload.broadcast || payload.user.id === myUser.id) {
+            let messageElement = $('<li>').text(payload.message).css(payload.styling);
+            $('#messages').append(messageElement);
+            let topOffset = messageElement.position().top;
+            $('#messages').animate({scrollTop: topOffset});
           }
-        }
-      });
+        });
 
-      socket.on('whisper', function(payload) {
-        if (payload.targetUsers.some(el => el === myUser.id) || payload.id === myUser.id) {
-          let messageElement = $('<li>').text(payload.message);
-          
-          if (payload.id != myUser.id) {
-            spawnNotification(payload.message, 'https://maxcdn.icons8.com/Share/icon/Messaging//message_outline1600.png','New whisper!');
-            messageElement.css({
+        socket.on('update users', function(payload) {
+          if (payload.broadcast || payload.user.id === myUser.id) {
+            let messageElement = $('<li>').text(payload.message).css(payload.styling);
+            $('#messages').append(messageElement);
+            let topOffset = messageElement.position().top;
+            $('#messages').animate({scrollTop: topOffset});
+          }
+          myUser = payload.users[myUser.id];
+          $('#users li').remove();
+          for (let user in payload.users) {
+            if (payload.users.hasOwnProperty(user)) {
+              let element = $("<li id='" + user + "'>" + payload.users[user].name + "</li>");
+              element.css({
+                cursor: 'pointer',
+                color: payload.users[user].color
+              });
+              element.click(function(e) {
+                $('form input').val('/whisper ' + payload.users[user].name + ' ');
+                $('form input').focus();
+              })
+              $('#users').append(element);
+            }
+          }
+        });
+
+        socket.on('whisper', function(payload) {
+          if (payload.user.id === myUser.id || payload.targetUsers.some(el => el === myUser.id)) {
+            let messageElement = $('<li>').text(payload.message);
+            
+            if (payload.user.id != myUser.id) {
+              spawnNotification(payload.message, 'https://maxcdn.icons8.com/Share/icon/Messaging//message_outline1600.png','New whisper!');
+              messageElement.css({
                 color: 'red',
                 fontStyle: 'italic',
                 fontWeight: 'bold'
               });
-          }
-          else {
-            messageElement.css({
+            }
+            else {
+              messageElement.css({
                 fontWeight: 'normal', 
                 color: '#989898',
                 fontStyle: 'italic'
               });
+            }
+            $('#messages').append(messageElement);
+            let topOffset = messageElement.position().top;
+            $('#messages').animate({scrollTop: topOffset});
           }
-          $('#messages').append(messageElement);
-          let topOffset = messageElement.position().top;
-          $('#messages').animate({scrollTop: topOffset});
-        }
-      });
-
-      $('#m').keydown(function(e) {
-        socket.emit('user typing', {
-          user: myUser,
-          key: e.key
         });
-      });
 
-      $('#m').keyup(function() {
-        socket.emit('user stop typing', {
-          user: myUser
+        socket.on('user typing', function(payload) {
+          
+          if (payload.user.id !== myUser.id) {
+            $('#typing-status').text(payload.message).css(payload.styling);
+            window.clearInterval(myInterval);
+            let topOffset = $('#typing-status').position().top;
+            $('#messages').animate({scrollTop: topOffset});
+          }
         });
-      });
 
-      socket.on('user typing', function(payload) {
-        
-        if (payload.user.id !== myUser.id) {
-          $('#typing-status').text(payload.user.name + ' is typing...');
-          window.clearInterval(myInterval);
-          let topOffset = $('#typing-status').position().top;
-          $('#messages').animate({scrollTop: topOffset});
-        }
-      });
+        socket.on('user stop typing', function(payload) {
+          if (payload.user.id !== myUser.id) {
+            myInterval = window.setTimeout(function() {
+              $('#typing-status').text('');
+            },2000);
+          }
+        });
 
-      socket.on('user stop typing', function(payload) {
-        if (payload.user.id !== myUser.id) {
-          myInterval = window.setTimeout(function() {
-            $('#typing-status').text('');
-          },2000);
-        }
-      });
+        socket.on('list users', function(payload) {
+          if (payload.broadcast || payload.user.id === myUser.id) {
+            let messageElement = $('<li>').text(payload.message).css(payload.styling);
+            $('#messages').append(messageElement);
+            let topOffset = messageElement.position().top;
+            $('#messages').animate({scrollTop: topOffset});
+          }
+        });
 
-      socket.on('list users', function(payload) {
-        if (payload.id === myUser.id) {
-          let messageElement = $('<li>').text(payload.message);
-          $('#messages').append(messageElement);
-          let topOffset = messageElement.position().top;
-          $('#messages').animate({scrollTop: topOffset});
-        }
-      });
+        socket.on('list commands', function(payload) {
+          if (payload.broadcast || payload.user.id === myUser.id) {
+            $('#messages').append($('<li>').text('Available commands (use without quotes or brackets):'));
+            let messageElement;
+            for (let i=0; i< payload.commands.length;i++) {
+              messageElement = $('<li>').text(payload.commands[i]).css(payload.styling);
+              $('#messages').append(messageElement);
+            }
+            let topOffset = messageElement.position().top;
+            $('#messages').animate({scrollTop: topOffset});       
+          }
+        });
 
-      socket.on('list commands', function(payload) {
-        if (payload.id === myUser.id) {
-          $('#messages').append($('<li>').text('Available commands (use without quotes or brackets):'));
+        socket.on('rps', function(payload) {
           let messageElement;
-          for (let i=0; i< payload.commands.length;i++) {
-            messageElement = $('<li>').text(payload.commands[i]).css({marginLeft: '10px'});
+          if (payload.broadcast) {
+            messageElement = $('<li>').text(payload.message).css(payload.styling);
+            $('#messages').append(messageElement);
+          }
+          else if (payload.user.id === myUser.id) {
+            messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
           }
           let topOffset = messageElement.position().top;
-          $('#messages').animate({scrollTop: topOffset});       
-        }
-      });
-
-      socket.on('rps', function(payload) {
-        let messageElement;
-        if (payload.broadcast) {
-          messageElement = $('<li>').text(payload.message).css({color: 'green'});
-          $('#messages').append(messageElement);
-        }
-        else if (payload.id === myUser.id) {
-          messageElement = $('<li>').text(payload.message).css({color: 'green'});
-          $('#messages').append(messageElement);
-        }
-        let topOffset = messageElement.position().top;
-        $('#messages').animate({scrollTop: topOffset});
-      });
-
-      socket.on('warning', function(payload) {
-        if (payload.id === myUser.id) {
-          let messageElement = $('<li>').text(payload.warning).css({color: 'red'});
-          $('#messages').append(messageElement);
-          let topOffset = messageElement.position().top;
           $('#messages').animate({scrollTop: topOffset});
+        });
+
+        socket.on('warning', function(payload) {
+          if (payload.broadcast || payload.user.id === myUser.id) {
+            let messageElement = $('<li>').text(payload.message).css(payload.styling);
+            $('#messages').append(messageElement);
+            let topOffset = messageElement.position().top;
+            $('#messages').animate({scrollTop: topOffset});
+          }
+        });
+
+        function makeId() {
+          let text = "";
+          let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+          for( let i=0; i < 5; i++ )
+              text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+          return text;
         }
       });
-
-      function makeId() {
-        let text = "";
-        let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-        for( let i=0; i < 5; i++ )
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
-
-        return text;
-      }
-    });
     </script>
   </body>
 </html>
