@@ -196,7 +196,7 @@
           }
         });
 
-        socket.on('rps', function(payload) {
+        socket.on('plugin', function(payload) {
           let messageElement;
           if (payload.broadcast) {
             messageElement = $('<li>').text(payload.message).css(payload.styling);

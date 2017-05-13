@@ -2,6 +2,7 @@ const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const RockPaperScissors = require('./plugins/RockPaperScissors.js');
+const Cards = require('./plugins/cards.js');
 
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html');
@@ -11,12 +12,12 @@ let users = {
 
 };
 
-const reply = (pluginCode, payload) => {
+const reply = (payload) => {
   if (payload.message) {
     if (!payload.styling) {
       payload.styling = {color: 'white'};
     }
-    io.emit(pluginCode, payload);
+    io.emit('plugin', payload);
   }
   else {
     throw "Payload must at least contain a message";
@@ -65,7 +66,13 @@ const plugins = {
       '\'/rps [number]\' - Initiates a game of \'Rock, Paper, Scissors\' with [number] open spots.', 
       '\'/rps [action]\' - If a game has started, declare your action with \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'.'
     ],
-    plugin: new RockPaperScissors((payload) => reply('rps', payload))
+    plugin: new RockPaperScissors((payload) => reply(payload))
+  },
+  cards: {
+    availableCommands: [
+      '\'/cards --help all\' - Display all available commands for Cards.'
+    ],
+    plugin: new Cards((payload) => reply(payload))
   }
 };
 
@@ -111,6 +118,8 @@ io.on('connection', function(socket) {
   });
 
   socket.on('chat message', function(payload) {
+    guaranteeUserMatch(payload.user);
+
     if (payload.message.startsWith('/')) {
       handleCommand(payload);
     }
@@ -126,7 +135,8 @@ io.on('connection', function(socket) {
   });
 
   socket.on('user typing', function(payload) {
-    
+    guaranteeUserMatch(payload.user);
+
     if (payload.key === '/') {
       users[payload.user.id].lockedOut = true;
       setTimeout(() => {
@@ -247,4 +257,10 @@ function emitWarning(message, user) {
     warning: message,
     user: user
   });
+}
+
+function guaranteeUserMatch(user) {
+  if (!users[user.id]) {
+    users[user.id] = user;
+  }
 }
