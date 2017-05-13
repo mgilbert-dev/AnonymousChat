@@ -61,6 +61,8 @@
           id: makeId(),
           color: 'limegreen'
         };
+        let inputs = [];
+        let inputCounter = -1;
 
         function spawnNotification(body, icon, title) {
           let options = {
@@ -75,8 +77,10 @@
         });
 
         $('form').submit(function() {
+          let message = $('#m').val();
+          inputs.unshift(message);
           socket.emit('chat message', {
-            message: $('#m').val(),
+            message: message,
             user: myUser
           });
           $('#m').val('');
@@ -84,6 +88,17 @@
         });
 
         $('#m').keydown(function(e) {
+          if (e.key === 'ArrowUp') {
+            inputCounter++;
+            $('#m').val(inputs[inputCounter]);
+          }
+          else if (e.key === 'ArrowDown') {
+            inputCounter--;
+            $('#m').val(inputs[inputCounter]);
+          }
+          else {
+            inputCounter = -1;
+          }
           socket.emit('user typing', {
             user: myUser,
             key: e.key
