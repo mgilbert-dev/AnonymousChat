@@ -1,3 +1,4 @@
 module.exports = {
-  REGULAR: 'regular'
+  REGULAR: 'regular',
+  BLACKJACK: 'blackjack'
 };

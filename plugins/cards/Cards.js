@@ -1,5 +1,6 @@
-const BlackJack = require('./cards/BlackJack.js');
-const Deck = require('./cards/Deck.js');
+const BlackJack = require('./BlackJack.js');
+const Deck = require('./Deck.js');
+const constants = require('./constants.js');
 
 module.exports = class Cards {
   constructor(reply) {
@@ -25,14 +26,14 @@ module.exports = class Cards {
   }
 
   receiveCommand(user, command) {
-    if (user) {
-      return this.emitWarning(user, 'Cards is currently in development. Features coming soon.');
-    }
+    // if (user) {
+    //   return this.emitWarning(user, 'Cards is currently in development. Features coming soon.');
+    // }
 
     const parsedCommands = this.extractCommands(command);
     if (parsedCommands.isValid) {
       if (parsedCommands.start) {
-        this.startGame(parsedCommands);
+        this.startGame(user, parsedCommands);
       }
       else if (parsedCommands.help) {
         this.getHelp(user, parsedCommands);
@@ -54,15 +55,13 @@ module.exports = class Cards {
   }
 
   joinGame(user, parsedCommands) {
-
-  }
-
-  startGame(user, parsedCommands) {
-    switch (parsedCommands.start.toLowerCase()) {
-      case 'black jack':
-        if (!this.games.bj) {
-          let cards = this.shuffleCards('bj');
-          this.games.bj = new BlackJack(cards, user, parsedCommands, this.reply);
+    switch (parsedCommands.join.toLowerCase()) {
+      case 'blackjack':
+        if (this.games.bj) {
+          this.games.bj.addPlayer(user);
+        }
+        else {         
+          this.emitWarning(user, 'There is no open game of blackjack. Type /cards --start blackjack to start one.');
         }
         break;
     
@@ -71,8 +70,21 @@ module.exports = class Cards {
     }
   }
 
-  shuffleCards(game) {
-    return new Deck(game);
+  startGame(user, parsedCommands) {
+    switch (parsedCommands.start.toLowerCase()) {
+      case 'blackjack':
+        if (!this.games.bj) {
+          let cards = new Deck(constants.BLACKJACK);
+          this.games.bj = new BlackJack(cards, user, parsedCommands, this.reply);
+        }
+        else {
+          this.emitWarning(user, 'A game of blackjack is already in progress. Type /cards --join blackjack to join.');
+        }
+        break;
+    
+      default:
+        break;
+    }
   }
 
   extractCommands(commands) {
