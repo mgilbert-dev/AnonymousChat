@@ -2,7 +2,7 @@ const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const RockPaperScissors = require('./plugins/RockPaperScissors.js');
-// const Cards = require('./plugins/cards.js');
+const Cards = require('./plugins/cards.js');
 
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html');
@@ -68,12 +68,12 @@ const plugins = {
     ],
     plugin: new RockPaperScissors((payload) => reply(payload))
   },
-  // cards: {
-  //   availableCommands: [
-  //     '\'/cards --help all\' - Display all available commands for Cards.'
-  //   ],
-  //   plugin: new Cards((payload) => reply(payload))
-  // }
+  cards: {
+    availableCommands: [
+      '\'/cards --help all\' - Display all available commands for Cards.'
+    ],
+    plugin: new Cards((payload) => reply(payload))
+  }
 };
 
 io.on('connection', function(socket) {

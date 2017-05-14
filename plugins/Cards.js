@@ -1,5 +1,5 @@
-const BlackJack = require('./cards/BlackJack.js');
-const Deck = require('./cards/Deck.js');
+// const BlackJack = require('./cards/BlackJack.js');
+// const Deck = require('./cards/Deck.js');
 
 module.exports = class Cards {
   constructor(reply) {
@@ -58,7 +58,7 @@ module.exports = class Cards {
       case 'black jack':
         if (!this.games.bj) {
           let cards = this.shuffleCards('bj');
-          this.games.bj = new BlackJack(cards, user, parsedCommands, this.reply);
+          // this.games.bj = new BlackJack(cards, user, parsedCommands, this.reply);
         }
         break;
     
@@ -68,7 +68,7 @@ module.exports = class Cards {
   }
 
   shuffleCards(game) {
-    return new Deck(game);
+    // return new Deck(game);
   }
 
   extractCommands(commands) {
