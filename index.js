@@ -2,7 +2,7 @@ const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const RockPaperScissors = require('./plugins/RockPaperScissors.js');
-const Cards = require('./plugins/cards.js');
+const Cards = require('./plugins/Cards.js');
 
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html');
