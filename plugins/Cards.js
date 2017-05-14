@@ -25,6 +25,10 @@ module.exports = class Cards {
   }
 
   receiveCommand(user, command) {
+    if (user) {
+      return this.emitWarning(user, 'Cards is currently in development. Features coming soon.');
+    }
+
     const parsedCommands = this.extractCommands(command);
     if (parsedCommands.isValid) {
       if (parsedCommands.start) {
