@@ -3,6 +3,7 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const RockPaperScissors = require('./plugins/RockPaperScissors.js');
 const Cards = require('./plugins/cards.js');
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html');
