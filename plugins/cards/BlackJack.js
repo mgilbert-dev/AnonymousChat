@@ -19,6 +19,16 @@ module.exports = class BlackJack {
 
   addPlayer(user) {
     this.players[user.id] = user;
-    console.log();
+    this.reply({
+      broadcast: true,
+      message: `${user.name} has joined the Blackjack table.`,
+      styling: {
+        color: 'deepskyblue'
+      }
+    });
+  }
+
+  receiveCommand(user, parsedCommands) {
+    
   }
 };

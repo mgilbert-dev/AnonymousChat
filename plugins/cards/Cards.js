@@ -41,6 +41,9 @@ module.exports = class Cards {
       else if (parsedCommands.join) {
         this.joinGame(user, parsedCommands);
       }
+      else if (parsedCommands.bj && this.games.bj) {
+        this.games.bj.receiveCommand(user, parsedCommands);
+      }
       else {
         return this.emitWarning(user, 'You must issue one of the following commands: \'/cards --start [game] -[#players]\',\'/cards --join [game]\', or \'--help [game]/all\'');
       }
