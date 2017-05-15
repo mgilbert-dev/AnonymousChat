@@ -7,11 +7,19 @@ module.exports = class Cards {
     this.games = {
       
     };
+
     this.reply = reply;
 
     this.playerCoins = {
 
     };
+
+    this.availableCommands = [
+      '\'/cards --start [game]\' - Start an instance of [game]. (example: \'/cards --start bj\'',
+      '\'/cards --join [game]\' - Join a current instance of [game]. (example: \'/cards --join bj\'',
+      '\'/cards --reset [game]\' - Reset a current instance of [game]. (example: \'/cards --reset bj\'',
+      'Available games: [bj] (Blackjack)'
+    ];
 
   }
 
@@ -55,12 +63,41 @@ module.exports = class Cards {
   }
 
   getHelp(user, parsedCommands) {
-
+    if (parsedCommands.help === 'all') {
+      this.availableCommands.forEach(command => {
+        this.reply({
+          user: user,
+          message: `${command}`,
+          styling: {
+            color: 'white'
+          }
+        });
+      });
+    }
+    else if (parsedCommands.help === 'bj') {
+      [
+        `\'/cards -bj -deal\' - Start a game with existing players`,
+        `\'/cards -bj -hit\' - Hit to draw another card`,
+        `\'/cards -bj -stand\' - Stand to keep your current card total`,
+        `\'/cards -bj -double\' - Double your bet and draw exactly once more (feature still in development)`,
+      ].forEach(command => {
+        this.reply({
+          user: user,
+          message: `${command}`,
+          styling: {
+            color: 'white'
+          }
+        });
+      });
+    }
+    else {
+      this.emitWarning(user, 'Valid options for help: \'/cards --help all\' and \'/cards --help bj\' (Blackjack)');
+    }
   }
 
   joinGame(user, parsedCommands) {
     switch (parsedCommands.join.toLowerCase()) {
-      case 'blackjack':
+      case 'bj':
         if (this.games.bj) {
           this.games.bj.addPlayer(user);
         }
@@ -76,13 +113,13 @@ module.exports = class Cards {
 
   startGame(user, parsedCommands) {
     switch (parsedCommands.start.toLowerCase()) {
-      case 'blackjack':
+      case 'bj':
         if (!this.games.bj) {
           let cards = new Deck(constants.BLACKJACK);
           this.games.bj = new BlackJack(cards, user, parsedCommands, this.reply, this.playerCoins);
         }
         else {
-          this.emitWarning(user, 'A game of blackjack is already in progress. Type /cards --join blackjack to join.');
+          this.emitWarning(user, 'A game of blackjack is already in progress. Type /cards --join bj to join.');
         }
         break;
     

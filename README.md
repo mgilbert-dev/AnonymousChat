@@ -1,5 +1,8 @@
 ## [Live](https://openchattr.herokuapp.com/)
 
+![Blackjack Flow]
+[Blackjack Flow]: documentation/blackjack-flow.md
+
 ### Features
 - Light Socket.io powered chat.
 - Mobile responsive.
@@ -15,7 +18,7 @@
 - Adding plugins! Currently users can play Rock, Paper, Scissors through command line
 
 ### Plugins
-Plugins are now usable, and with an established contract that defines how plugins can interact through the server with users in the channel. By adding the following key-values to the plugin object at the beginning of the file, and creating a class method called 'receiveCommand()' that takes two arguments (the user issuing the command, and an array of commands), the app integrates its available commands with those displayed to users when they request for a list of commands, directs commands prefixed with the plugin's key to the plugin.receiveCommand() function mentioned above, and initializes the plugin with a function that that if called inside the plugin, emits a payload to the users in a channel. The plugin has power over who receives the message and the CSS styling of it). Below is the aforementioned contract.
+Plugins are now usable, and with a contract that defines how plugins can interact through the server with users in the channel. By adding the following key-values to the plugin object at the beginning of the file, and creating a class method called 'receiveCommand()' that takes two arguments (the user issuing the command, and an array of commands), the app integrates its available commands with those displayed to users when they request for a list of commands, directs commands prefixed with the plugin's key to the plugin.receiveCommand() function mentioned above, and initializes the plugin with a function that if called inside the plugin, emits a payload to the users in a channel. The plugin has power over who receives the message and the CSS styling of it). Below is the aforementioned contract.
 
       Integration: Add plugin to plugins object as follows:
 

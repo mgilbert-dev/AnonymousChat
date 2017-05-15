@@ -26,7 +26,7 @@ module.exports = class BlackJack {
         broadcast: true,
         message: `${player.name} hits ${card.representation.visual}, for a total of ${points}`,
         styling: {
-          color: 'deepskyblue'
+          color: 'purple'
         }
       });
       this.displayAction();
@@ -38,7 +38,7 @@ module.exports = class BlackJack {
       broadcast: true,
       message: `${player.name} hits ${card.representation.visual} and busts!`,
       styling: {
-        color: 'deepskyblue'
+        color: 'purple'
       }
     });
     this.actionOn++;
@@ -46,7 +46,10 @@ module.exports = class BlackJack {
   }
 
   countPoints(player) {
-    let total = this.hands[player.id].reduce((a,b) => Math.min(a.value,10) + Math.min(b.value));
+    let total = 0;
+    this.hands[player.id].forEach(card => {
+      total += Math.min(card.value, 10);
+    });
     if (this.hands[player.id].find(el => el.value === 1)) {
       if (total + 10 > 21) {
         return total;
@@ -87,7 +90,51 @@ module.exports = class BlackJack {
   }
 
   dealerTurn() {
+    let points = 0;
 
+    this.dealer.hand.forEach(card => {
+      if (card.value === 1) {
+       points += 11;
+      }
+      else {
+        points += Math.min(card.value, 10);
+      }
+    });
+    let card;
+    while (points < 17) {
+      card = this.deck.deal(1)[0];
+      this.dealer.hand.push(card);
+      this.reply({
+        broadcast: true,
+        message: `Dealer hits ${card.representation.visual}.`,
+        styling: {
+          color: 'orange'
+        }
+      });
+      points += Math.min(card.value,10);
+      if (card.value === 1 && points < 12) {
+        points += 10;
+      }
+    }
+    if (points > 21) {
+      this.reply({
+        broadcast: true,
+        message: `The dealer busts!`,
+        styling: {
+          color: 'orange'
+        }
+      });
+    }
+    else {
+      this.reply({
+        broadcast: true,
+        message: `The dealer stands with ${points}.`,
+        styling: {
+          color: 'orange'
+        }
+      });
+    }
+    this.resolveGame();
   }
 
   displayAction() {
@@ -123,27 +170,34 @@ module.exports = class BlackJack {
           }
         });
     });
-  }
-
-  getDecisionFrom(player) {
     this.reply({
       broadcast: true,
-      message: `Action on ${player.name}. Type \'/cards -bj [-hit/-stand/-double]\'.`,
+      message: 'Available actions: \'/cards -bj [-hit/-stand/-double]\'.',
       styling: {
         color: 'deepskyblue'
       }
     });
   }
 
-  hit(player) {
-    if (this.players[this.actionOn].id === player.id) {
+  getDecisionFrom(player) {
+    this.reply({
+      broadcast: true,
+      message: `Action on ${player.name}.`,
+      styling: {
+        color: 'deepskyblue'
+      }
+    });
+  }
+
+  hit(user) {
+    if (this.players[this.actionOn].id === user.id) {
       let card = this.deck.deal(1);
-      this.hands[player.id].push(card);
-      this.analyzeTurn(player, card[0]);
+      this.hands[user.id].push(card[0]);
+      this.analyzeTurn(user, card[0]);
     }
     else {
       this.reply({
-        broadcast: true,
+        user: user,
         message: `It is not your turn to hit.`,
         styling: {
           color: 'red'
@@ -155,7 +209,7 @@ module.exports = class BlackJack {
   initiate(user, commands) {
     this.reply({
       broadcast: true,
-      message: `${user.name} has started a game of Blackjack. Type \'/cards --join blackjack\' to join.`,
+      message: `${user.name} has started a game of Blackjack. Type \'/cards --join bj\' to join.`,
       styling: {
         color: 'deepskyblue'
       }
@@ -168,27 +222,37 @@ module.exports = class BlackJack {
       broadcast: true,
       message: `${user.name} has joined the Blackjack table.`,
       styling: {
-        color: 'deepskyblue'
+        color: 'purple'
       }
     });
   }
 
   stand(user) {
-    let points = this.countPoints(user);
-    if (points >>> 0 !== parseFloat(points)) {
-      points = points.split(' or ')[1];
-    }
-
-    this.reply({
-      broadcast: true,
-      message:`${user.name} stands with ${this.deck.visualizeCards(this.hands[user.id])}`,
-      styling: {
-        color: 'deepskyblue'
+    if (this.players[this.actionOn].id === user.id) {
+      let points = this.countPoints(user);
+      if (points >>> 0 !== parseFloat(points)) {
+        points = points.split(' or ')[1];
       }
-    });
-    this.actionOn++;
-    this.displayAction();
 
+      this.reply({
+        broadcast: true,
+        message:`${user.name} stands with ${points}`,
+        styling: {
+          color: 'purple'
+        }
+      });
+      this.actionOn++;
+      this.displayAction();
+    }
+    else {
+      this.reply({
+        user: user,
+        message: `It is not your turn to stand.`,
+        styling: {
+          color: 'red'
+        }
+      });
+    }
   }
 
   receiveCommand(user, commands) {
@@ -204,5 +268,96 @@ module.exports = class BlackJack {
     else if (commands.double && this.phase === constants.CARDS_DEALT) {
       
     }
+  }
+
+  findBestHand(hand) {
+    let aceCount = 0;
+    let points = 0;
+    hand.forEach(card => {
+      if (card.value === 1) {
+        points += 11;
+        aceCount++;
+      }
+      else {
+        points += Math.min(card.value, 10);
+      }
+    });
+    while (points > 21 && aceCount > 0) {
+      points -= 10;
+      aceCount--;
+    }
+    if (points > 21) {
+      return false;
+    }
+    else {
+      return points;
+    }
+  }
+
+  payOutWinners(dealerHand, winners) {
+    if (dealerHand) {
+      this.reply({
+        broadcast: true,
+        message: `The dealer stood with ${dealerHand}, so the winners are: --${winners.map(el => el.player.name).join(' --')}`,
+        styling: {
+          color: 'deepskyblue'
+        }
+      });
+    }
+    else {
+      this.reply({
+        broadcast: true,
+        message: `The dealer busted, so the winners are: --${winners.map(el => el.player.name).join(' --')}`,
+        styling: {
+          color: 'deepskyblue'
+        }
+      });
+    }
+  }
+
+  resetGame() {
+    this.phase = constants.GAME_STARTING;
+    this.deck.shuffleCards();
+    this.reply({
+      broadcast: true,
+      message: `Cards shuffled.`,
+      styling: {
+        color: 'orange'
+      }
+    });
+    this.actionOn = 0;
+    this.hands = {};
+    this.dealer.hand = [];
+    this.dealCardsToTable();
+    
+  }
+
+  resolveGame() {
+    let busts = [];
+    let nonBusts = [];
+    let winners = [];
+    let dealerPoints = this.findBestHand(this.dealer.hand);
+    this.players.forEach(player => {
+      let points = this.findBestHand(this.hands[player.id]);
+      if (points) {
+        nonBusts.push({
+          player: player,
+          points: points
+        });
+      }
+      else {
+        busts.push(player);
+      }
+    });
+    if (dealerPoints) {
+      winners = nonBusts.filter(hand => {
+        return hand.points > dealerPoints;
+      });
+    }
+    else {
+      winners = nonBusts;
+    }
+    this.payOutWinners(dealerPoints, winners);
+    this.resetGame();
   }
 };
