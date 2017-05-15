@@ -31,6 +31,7 @@ module.exports = class Cards {
     // }
 
     const parsedCommands = this.extractCommands(command);
+
     if (parsedCommands.isValid) {
       if (parsedCommands.start) {
         this.startGame(user, parsedCommands);
@@ -78,7 +79,7 @@ module.exports = class Cards {
       case 'blackjack':
         if (!this.games.bj) {
           let cards = new Deck(constants.BLACKJACK);
-          this.games.bj = new BlackJack(cards, user, parsedCommands, this.reply);
+          this.games.bj = new BlackJack(cards, user, parsedCommands, this.reply, this.playerCoins);
         }
         else {
           this.emitWarning(user, 'A game of blackjack is already in progress. Type /cards --join blackjack to join.');

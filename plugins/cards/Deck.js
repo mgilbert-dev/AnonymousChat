@@ -3,13 +3,13 @@ const Card = require('./Card.js');
 module.exports = class Deck {
   constructor(game) {
     this.game = game;
-    this.cards = this.shuffleCards(
-      this.generateCards()
-    );
+    this.cards = this.generateCards();
+    this.dealtCards = [];
   }
 
-  shuffleCards(cards) {
-    let m = cards.length;
+  shuffleCards() {
+    this.cards = this.cards.concat(this.dealtCards);
+    let m = this.cards.length;
     let i;
     let t;
 
@@ -17,12 +17,24 @@ module.exports = class Deck {
 
       i = Math.floor(Math.random() * m--);
 
-      t = cards[m];
-      cards[m] = cards[i];
-      cards[i] = t;
+      t = this.cards[m];
+      this.cards[m] = this.cards[i];
+      this.cards[i] = t;
     }
+  }
 
+  deal(numCards) {
+    let cards = [];
+    for (let i = 0; i < numCards; i++) {
+      let card = this.cards.pop();
+      cards = cards.concat(card);
+      this.dealtCards = this.dealtCards.concat(card);
+    }
     return cards;
+  }
+
+  visualizeCards(cards) {
+    return cards.map(el => el.representation.visual).join(' ');
   }
 
   generateCards() {
