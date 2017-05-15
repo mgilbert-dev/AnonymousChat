@@ -1,7 +1,6 @@
 ## [Live](https://openchattr.herokuapp.com/)
 
-![Blackjack Flow]
-[Blackjack Flow]: documentation/blackjack-flow.md
+[Blackjack Flow](documentation/blackjack-flow.md)
 
 ### Features
 - Light Socket.io powered chat.
