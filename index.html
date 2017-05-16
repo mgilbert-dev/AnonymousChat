@@ -52,6 +52,15 @@
             }
           })
         }
+        var ul = document.getElementById('messages');
+        var observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            let offsetTop = mutation.addedNodes[0].offsetTop;
+            ul.scrollTop = offsetTop;
+          });    
+        });
+        var config = { attributes: true, childList: true, characterData: true };
+        observer.observe(ul, config);
         inputForm.focus();
         let socket = io();
         let myInterval;
@@ -116,8 +125,6 @@
           if (payload.broadcast || payload.user.id === myUser.id) {
             let messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
-            let topOffset = messageElement.position().top;
-            $('#messages').animate({scrollTop: topOffset});
           }
         });
 
@@ -125,8 +132,6 @@
           if (payload.broadcast || payload.user.id === myUser.id) {
             let messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
-            let topOffset = messageElement.position().top;
-            $('#messages').animate({scrollTop: topOffset});
           }
           myUser = payload.users[myUser.id];
           $('#users li').remove();
@@ -166,8 +171,6 @@
               });
             }
             $('#messages').append(messageElement);
-            let topOffset = messageElement.position().top;
-            $('#messages').animate({scrollTop: topOffset});
           }
         });
 
@@ -176,8 +179,6 @@
           if (payload.user.id !== myUser.id) {
             $('#typing-status').text(payload.message).css(payload.styling);
             window.clearInterval(myInterval);
-            let topOffset = $('#typing-status').position().top;
-            $('#messages').animate({scrollTop: topOffset});
           }
         });
 
@@ -193,8 +194,6 @@
           if (payload.broadcast || payload.user.id === myUser.id) {
             let messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
-            let topOffset = messageElement.position().top;
-            $('#messages').animate({scrollTop: topOffset});
           }
         });
 
@@ -205,9 +204,7 @@
             for (let i=0; i< payload.commands.length;i++) {
               messageElement = $('<li>').text(payload.commands[i]).css(payload.styling);
               $('#messages').append(messageElement);
-            }
-            let topOffset = messageElement.position().top;
-            $('#messages').animate({scrollTop: topOffset});       
+            }       
           }
         });
 
@@ -221,16 +218,12 @@
             messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
           }
-          let topOffset = messageElement.position().top;
-          $('#messages').animate({scrollTop: topOffset});
         });
 
         socket.on('warning', function(payload) {
           if (payload.broadcast || payload.user.id === myUser.id) {
             let messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
-            let topOffset = messageElement.position().top;
-            $('#messages').animate({scrollTop: topOffset});
           }
         });
 
