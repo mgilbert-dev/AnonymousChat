@@ -53,16 +53,6 @@ module.exports = class RockPaperScissors {
     return messagePart;
   }
 
-  emitWarning(user, message) {
-    this.reply({
-      message: message,
-      user: user,
-      styling: {
-        color: 'red'
-      }
-    });
-  }
-
   generateMessage(categories) {
     let message = "The results are in! ";
     let paperPlayers = this.constructMessagePart(categories.paper)|| "nobody";
@@ -81,25 +71,65 @@ module.exports = class RockPaperScissors {
     return ['rock', 'paper', 'scissors', 'r', 'p', 's'].includes(action);
   }
 
+  receiveCommand(user, command) {
+    command = command[0];
+    if (this.currentGame) {
+      if (this.isValidAction(command)) {
+        this.setPlayerAction(user, command);     
+      }
+      else {
+        this.sendMessage('Invalid action. Valid inputs are \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'', 'red', false, user);
+      }
+      if (this.isGameOver()) {
+        this.resolveGame();
+      }
+      else {
+        this.sendMessage(`${user.name} has submitted their decision. ${this.numPlayers - Object.keys(this.players).length} spot(s) left.`, 'magenta', true);
+      }
+    }
+    else if (command >>> 0 === parseFloat(command)) {
+      this.startGame(command);
+      this.sendMessage(`${user.name} has started a game of \'Rock, Paper, Scissors\', and initiated it to ${command} player(s). The game will resolve once ${command} player(s) have submitted their choice. Type \'/commands\' for instructions.`, 'magenta', true);
+    }
+    else {
+      this.sendMessage('The game has either already been initiated or you didn\'t enter a positive integer', 'red', false, user);
+    }
+  }
+
   resetGame() {
     this.currentGame = false;
     this.players = {};
     this.numPlayers = 0;
   }
 
-  resolveGame(uer) {
+  resolveGame() {
     let categories = this.categorizePlayers();
     let message = this.generateMessage(categories);
     
     this.resetGame();
     
-    this.reply({
-      broadcast: true,
-      message: message,
-      styling: {
-        color: 'deepskyblue'
-      }
-    });
+    this.sendMessage(message, 'magenta', true);
+  }
+
+  sendMessage(message, color, broadcast = true, user = false) {
+    if (broadcast) {
+      this.reply({
+        broadcast: true,
+        message: message,
+        styling: {
+          color: color
+        }
+      });
+    }
+    else {
+      this.reply({
+        user: user,
+        message: message,
+        styling: {
+          color: color
+        }
+      });
+    }
   }
 
   setPlayerAction(user, action) {
@@ -111,44 +141,5 @@ module.exports = class RockPaperScissors {
   startGame(numPlayers) {
     this.currentGame = true;
     this.numPlayers = parseInt(numPlayers);
-  }
-
-  receiveCommand(user, command) {
-    command = command[0];
-    if (this.currentGame) {
-      if (this.isValidAction(command)) {
-        this.setPlayerAction(user, command);     
-      }
-      else {
-        return this.emitWarning(user, 'Invalid action. Valid inputs are \'rock\',\'paper\',\'scissors\',\'r\',\'p\', or \'s\'');
-      }
-      if (this.isGameOver()) {
-        this.resolveGame();
-      }
-      else {
-        this.reply({
-          user: user,
-          broadcast: true,
-          message: `${user.name} has submitted their decision. ${this.numPlayers - Object.keys(this.players).length} spot(s) left.`,
-          styling: {
-            color: 'deepskyblue'
-          }
-        });
-      }
-    }
-    else if (command >>> 0 === parseFloat(command)) {
-      this.startGame(command);
-      this.reply({
-        user: user,
-        broadcast: true,
-        message: `${user.name} has started a game of \'Rock, Paper, Scissors\', and initiated it to ${command} players. The game will resolve once ${command} players have submitted their choice. Type \'/commands\' for instructions.`,
-        styling: {
-          color: 'deepskyblue'
-        }
-      });
-    }
-    else {
-      return this.emitWarning(user, 'The game has either already been initiated or you didn\'t enter a positive integer');
-    }
   }
 };
