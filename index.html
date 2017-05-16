@@ -97,6 +97,7 @@
         });
 
         $('#m').keydown(function(e) {
+          
           if (e.key === 'ArrowUp') {
             inputCounter++;
             $('#m').val(inputs[inputCounter]);
@@ -122,6 +123,7 @@
 
         socket.on('chat message', function(payload) {
           $('#typing-status').text('');
+
           if (payload.broadcast || payload.user.id === myUser.id) {
             let messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
@@ -129,12 +131,14 @@
         });
 
         socket.on('update users', function(payload) {
+
           if (payload.broadcast || payload.user.id === myUser.id) {
             let messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
           }
           myUser = payload.users[myUser.id];
           $('#users li').remove();
+
           for (let user in payload.users) {
             if (payload.users.hasOwnProperty(user)) {
               let element = $("<li id='" + user + "'>" + payload.users[user].name + "</li>");
@@ -152,6 +156,7 @@
         });
 
         socket.on('whisper', function(payload) {
+
           if (payload.user.id === myUser.id || payload.targetUsers.some(el => el === myUser.id)) {
             let messageElement = $('<li>').text(payload.message);
             
@@ -183,6 +188,7 @@
         });
 
         socket.on('user stop typing', function(payload) {
+
           if (payload.user.id !== myUser.id) {
             myInterval = window.setTimeout(function() {
               $('#typing-status').text('');
@@ -191,6 +197,7 @@
         });
 
         socket.on('list users', function(payload) {
+
           if (payload.broadcast || payload.user.id === myUser.id) {
             let messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
@@ -198,9 +205,11 @@
         });
 
         socket.on('list commands', function(payload) {
+
           if (payload.broadcast || payload.user.id === myUser.id) {
             $('#messages').append($('<li>').text('Available commands (use without quotes or brackets):'));
             let messageElement;
+
             for (let i=0; i< payload.commands.length;i++) {
               messageElement = $('<li>').text(payload.commands[i]).css(payload.styling);
               $('#messages').append(messageElement);
@@ -210,6 +219,7 @@
 
         socket.on('plugin', function(payload) {
           let messageElement;
+
           if (payload.broadcast) {
             messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
@@ -221,6 +231,7 @@
         });
 
         socket.on('warning', function(payload) {
+
           if (payload.broadcast || payload.user.id === myUser.id) {
             let messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
