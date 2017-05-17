@@ -77,10 +77,18 @@ The first plugin (a game allowing the channel to engage in Rock, Paper, Scissors
           });
       }
 
-### Limitations
+### Plugin specific features:
 
-- Chrome notification API doesn't seem to work in full screen. Notifications also don't always trigger immediately.
-- Font sizes a bit inconsistent in mobile view.
+#### Blackjack
+
+- Players compete against the house with a starting purse of $1000.
+- Supports hit / stand / double (split and blackjack in development).
+
+#### Rock, Paper, Scissors
+
+- Supports as many (or as little) players as are in the room.
+- Initialized with a target number of players, and waits until that number of players have submitted their choice (which is not broadcasted to the channel). Once enough submissions are made, it reveals everyone's choice and indicates who beat whom.
+
 
 ### Vision
 

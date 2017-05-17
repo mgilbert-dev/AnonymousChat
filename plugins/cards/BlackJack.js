@@ -8,6 +8,7 @@ module.exports = class BlackJack {
       hand: [],
       name: 'dealer'
     };
+    this.currentBets = {};
     this.hands = {};
     this.playerCoins = playerCoins;
     this.reply = reply;
@@ -17,9 +18,14 @@ module.exports = class BlackJack {
   }
 
   addPlayer(user) {
-    this.players.push(user);
-    this.sendMessage(`${user.name} has joined the Blackjack table.`, 'gold', true);
-    this.sendMessage(`Thanks for joining! Type \'/cards -bj -deal\' to deal.`, user.color, false, user);
+    if (this.players.find(el => el.id === user.id)) {
+      this.sendMessage(`You have already joined the table`, 'red', false, user);
+    }
+    else {
+      this.players.push(user);
+      this.sendMessage(`${user.name} has joined the Blackjack table.`, 'gold', true);
+      this.sendMessage(`Thanks for joining! Type \'/cards -bj -bet --amount [amount]\' to bet and \'/cards -bj -deal\' to deal.`, user.color, false, user);
+    }
   }
 
   analyzeTurn(player, card) {
@@ -61,11 +67,27 @@ module.exports = class BlackJack {
   }
 
   dealCardsToPlayer(player) {
-    let cards = this.deck.deal(2);
-    this.hands[player.id] = cards;
-    let cardVisuals = this.deck.visualizeCards(cards);
 
-    this.sendMessage(`Your cards are ${cardVisuals}`, player.color, false, player);
+    if (this.playerCoins[player.id] > 50) {
+      this.currentBets[player.id] = this.currentBets[player.id] || 50;
+      let cards = this.deck.deal(2);
+      this.hands[player.id] = cards;
+      let cardVisuals = this.deck.visualizeCards(cards);
+
+      this.sendMessage(`Your cards are ${cardVisuals}`, player.color, false, player);
+    }
+    else {
+      this.currentBets[player.id] = 0;
+      let cards = this.deck.deal(2);
+      this.hands[player.id] = cards;
+      let cardVisuals = this.deck.visualizeCards(cards);
+
+      this.sendMessage(`You don't have enough coins to make a bet, so your current bet is 0`, 'red', false, player);
+      this.sendMessage(`Your cards are ${cardVisuals}`, player.color, false, player);
+    }
+
+    this.playerCoins[player.id] -= this.currentBets[player.id];
+    
   }
 
   dealCardsToTable() {
@@ -139,6 +161,7 @@ module.exports = class BlackJack {
   
     this.players.forEach(player => {
       this.sendMessage(`--${player.name}: ${this.deck.visualizeCards(this.hands[player.id])}--`, 'gold', true);
+      this.sendMessage(`--${player.name} | Bet / Total: $${this.currentBets[player.id]} / $${this.playerCoins[player.id]}`, player.color, true);
     });
 
     this.sendMessage('Available actions: \'/cards -bj [-hit/-stand/-double]\'.', 'white', true);
@@ -189,16 +212,40 @@ module.exports = class BlackJack {
 
   initiate(user) {
     this.sendMessage(`${user.name} has started a game of Blackjack. Type \'/cards --join bj\' to join.`, 'gold', true);
-    this.sendMessage(`Thanks for joining! Type \'/cards -bj -deal\' to deal.`, user.color, false, user);
+    this.sendMessage(`Thanks for joining! Type \'/cards -bj -bet --amount [amount]\' to bet and \'/cards -bj -deal\' to deal.`, user.color, false, user);
   }
 
   payOutWinners(dealerHand, winners) {
 
     if (dealerHand) {
-      this.sendMessage(`The dealer stood with ${dealerHand}, so the winners are: --${winners.map(el => el.player.name).join(' --')}`, 'gold', true);
+      this.sendMessage(`The dealer stood with ${dealerHand}`, 'gold', true);
     }
     else {
-      this.sendMessage(`The dealer busted, so the winners are: --${winners.map(el => el.player.name).join(' --')}`, 'gold', true);
+      this.sendMessage(`The dealer busted`, 'gold', true);
+    }
+    if (winners.length > 0) {
+      winners.forEach(winner => {
+        this.playerCoins[winner.player.id] += (this.currentBets[winner.player.id] * 2);
+        this.sendMessage(`${winner.player.name} wins $${this.currentBets[winner.player.id]} with a score of ${winner.points}`, winner.player.color, true);
+      });
+    }
+    else {
+        this.sendMessage(`House wins.`, 'gold', true);
+    }
+    
+  }
+
+  placeBet(user, commands) {
+    if (!commands.amount || commands.amount >>> 0 !== parseFloat(commands.amount)) {
+      this.sendMessage(`You must use an integer as an amount, and without square brackets. Example: \'/cards -bj -bet --amount [amount]\'`, 'red', false, user);
+    }
+    else if (this.playerCoins[user.id] > commands.amount) {
+      this.currentBets[user.id] = commands.amount;
+      this.sendMessage(`${user.name} placed a bet of $${commands.amount}.`, user.color, true);
+    }
+    else {
+      this.currentBets[user.id] = 0;
+      this.sendMessage(`You don't have enough coins to make the minimum bet, so your current bet is zero.`, 'red', false, user);
     }
   }
 
@@ -216,9 +263,15 @@ module.exports = class BlackJack {
     else if (commands.double && this.phase === constants.CARDS_DEALT) {
       
     }
+    else if (commands.bet && this.phase === constants.GAME_STARTING) {
+      this.placeBet(user, commands);
+    }
     else if (commands.reset) {
       this.sendMessage(`${user.name} reset the game.`, 'red', true);
       this.resetGame();
+    }
+    else {
+      this.sendMessage(`That command is not valid right now`, 'red', false, user);
     }
   }
 

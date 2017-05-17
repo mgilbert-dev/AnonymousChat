@@ -58,6 +58,7 @@ module.exports = class Cards {
     }
     else if (parsedCommands.help === 'bj') {
       [
+        `\'/cards -bj -bet --amount [amount]\' - Place bet (without square brackets).`,
         `\'/cards -bj -deal\' - Start a game with existing players`,
         `\'/cards -bj -hit\' - Hit to draw another card`,
         `\'/cards -bj -stand\' - Stand to keep your current card total`,
@@ -76,7 +77,9 @@ module.exports = class Cards {
   }
 
   joinGame(user, parsedCommands) {
-
+    this.playerCoins[user.id] = this.playerCoins[user.id] || 1000;
+    this.sendMessage(`You have ${this.playerCoins[user.id]} coins`, user.color, false, user);
+    
     switch (parsedCommands.join.toLowerCase()) {
       case 'bj':
         if (this.games.bj) {
@@ -145,6 +148,8 @@ module.exports = class Cards {
   }
 
   startGame(user, parsedCommands) {
+    this.playerCoins[user.id] = this.playerCoins[user.id] || 1000;
+    this.sendMessage(`You have ${this.playerCoins[user.id]} coins`, user.color, false, user);
 
     switch (parsedCommands.start.toLowerCase()) {
       case 'bj':
