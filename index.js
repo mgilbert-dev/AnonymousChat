@@ -35,7 +35,9 @@ let basicCommands = [
   '\'/name [name]\' - change your name.', 
   '\'/color [color]\' - change your font color.', 
   '\'/users\' - List users in room.', 
-  '\'/whisper [name] [message]\' - Directly message everyone with that name.'
+  '\'/whisper [name] [message]\' - Directly message everyone with that name.',
+  '\'/save [key1] [key2]...\' - Save user information to local storage. Available keys are \'name\', \'id\', and \'color.\'',
+  '\'/delete [key1] [key2]...\' - Delete user information saved on local storage. Available keys are \'name\', \'id\', and \'color.\''
 ];
 
 /* PLUGIN CONTRACT
@@ -240,6 +242,21 @@ function handleCommand(payload) {
         }
       });
       break;
+
+    case '/save':
+      io.emit('save data', {
+        keys: args,
+        user: payload.user
+      });
+      break;
+
+    case '/delete':
+      io.emit('delete data', {
+        keys: args,
+        user: payload.user
+      });
+      break;
+
     default:
       for (let plugin in plugins) {
         if (plugins.hasOwnProperty(plugin)) {

@@ -81,6 +81,12 @@
           let n = new Notification(title, options);
         }
 
+        for (let prop in myUser) {
+          if (myUser.hasOwnProperty(prop) && localStorage.getItem(prop)) {
+            myUser[prop] = localStorage.getItem(prop);
+          }
+        }
+
         socket.emit('user connected', {
           user: myUser
         });
@@ -228,6 +234,34 @@
             messageElement = $('<li>').text(payload.message).css(payload.styling);
             $('#messages').append(messageElement);
           }
+        });
+
+        socket.on('save data', function(payload) {
+          let messageElement;
+          payload.keys.forEach(key => {
+            if (myUser[key]) {
+              localStorage.setItem(key, myUser[key]);
+              messageElement = $('<li>').text(`${key} saved`).css({color: 'grey'});
+            }
+            else {
+              messageElement = $('<li>').text(`There is no property called ${key} to save`).css({color: 'red'});  
+            }
+            $('#messages').append(messageElement);
+          });
+        });
+
+        socket.on('delete data', function(payload) {
+          let messageElement
+          payload.keys.forEach(key => {
+            if (localStorage.getItem(key)) {
+              localStorage.removeItem(key);
+              messageElement = $('<li>').text(`${key} deleted`).css({color: 'grey'});
+            }
+            else {
+              messageElement = $('<li>').text(`There is no property called ${key} stored in local storage`).css({color: 'red'});  
+            }
+            $('#messages').append(messageElement);
+          });
         });
 
         socket.on('warning', function(payload) {
