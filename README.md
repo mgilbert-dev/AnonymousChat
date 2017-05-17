@@ -11,6 +11,8 @@
     3) /whisper \<name> <message> - Private message all users by that name.
     4) /users - List all users in channel (this is helpful for mobile users where the user list is not displayed due to limited real estate).
     5) /commands - List all available commands.
+    6) /save \<attribute> - Save attribute to local storage to persist sessions.
+    7) /delete \<attribute> - Delete attribuet from local storage.
 - Notifications for users that are currently tabbed out.
 - Clicking on a user's name prefills message with a whisper.
 - Users notified when others connect/disconnect.
