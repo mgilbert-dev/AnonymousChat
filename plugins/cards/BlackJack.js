@@ -242,7 +242,7 @@ module.exports = class BlackJack {
   payOutWinners(dealerHand, winners, pushes) {
     pushes.forEach(push => {
       this.userCoins[push.user.id] += (this.currentBets[push.user.id]);
-        this.sendMessage(`${push.user.name} pushes with a score of ${push.points} and gets their money back`, push.user.color, true);
+      this.sendMessage(`${push.user.name} pushes with a score of ${push.points} and gets their money back`, push.user.color, true);
     });
     if (winners.length > 0) {
       winners.forEach(winner => {
