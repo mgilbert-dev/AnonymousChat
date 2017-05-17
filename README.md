@@ -16,6 +16,7 @@
 - Users notified when others connect/disconnect.
 - Cycle through previous comands using up and down arrow.
 - Plugins! Currently users can play 'Rock, Paper, Scissors' and 'Blackjack'.
+- Users can save properties that they have set to local storage by typing in the command '/save [key1] [key2], etc..'. Available keys right now are 'name' 'color' and 'id'. Id will be used in the future to retain data with plugins.
 
 ### Plugins
 Plugins are now usable, and with a contract that defines how plugins can interact through the server with users in the channel. By adding the following key-values to the plugin object at the beginning of the file, and creating a class method called 'receiveCommand()' that takes two arguments (the user issuing the command, and an array of commands), the app integrates its available commands with those displayed to users when they request for a list of commands, directs commands prefixed with the plugin's key to the plugin.receiveCommand() function mentioned above, and initializes the plugin with a function that if called inside the plugin, emits a payload to the users in a channel. The plugin has power over who receives the message and the CSS styling of it). Below is the aforementioned contract.
