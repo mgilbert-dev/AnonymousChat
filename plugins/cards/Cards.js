@@ -6,7 +6,7 @@ module.exports = class Cards {
   constructor(reply) {
     this.games = {};
     this.reply = reply;
-    this.playerCoins = {};
+    this.userCoins = {};
     this.availableCommands = [
       '\'/cards --start [game]\' - Start an instance of [game]. (example: \'/cards --start bj\'',
       '\'/cards --join [game]\' - Join a current instance of [game]. (example: \'/cards --join bj\'',
@@ -59,7 +59,7 @@ module.exports = class Cards {
     else if (parsedCommands.help === 'bj') {
       [
         `\'/cards -bj -bet --amount [amount]\' - Place bet (without square brackets).`,
-        `\'/cards -bj -deal\' - Start a game with existing players`,
+        `\'/cards -bj -deal\' - Start a game with existing users`,
         `\'/cards -bj -hit\' - Hit to draw another card`,
         `\'/cards -bj -stand\' - Stand to keep your current card total`,
         `\'/cards -bj -double\' - Double your bet and draw exactly once more (feature still in development)`,
@@ -77,13 +77,13 @@ module.exports = class Cards {
   }
 
   joinGame(user, parsedCommands) {
-    this.playerCoins[user.id] = this.playerCoins[user.id] || 1000;
-    this.sendMessage(`You have ${this.playerCoins[user.id]} coins`, user.color, false, user);
-    
+    this.userCoins[user.id] = this.userCoins[user.id] || 1000;
+    this.sendMessage(`You have ${this.userCoins[user.id]} coins`, user.color, false, user);
+
     switch (parsedCommands.join.toLowerCase()) {
       case 'bj':
         if (this.games.bj) {
-          this.games.bj.addPlayer(user);
+          this.games.bj.adduser(user);
         }
         else {
           this.sendMessage('There is no open game of blackjack. Type /cards --start blackjack to start one.', 'red', false, user);
@@ -117,7 +117,7 @@ module.exports = class Cards {
         this.games.bj.receiveCommand(user, parsedCommands);
       }
       else {
-        this.sendMessage('You must issue one of the following commands: \'/cards --start [game] -[#players]\',\'/cards --join [game]\', or \'--help [game]/all\'', 'red', false, user);
+        this.sendMessage('You must issue one of the following commands: \'/cards --start [game] -[#users]\',\'/cards --join [game]\', or \'--help [game]/all\'', 'red', false, user);
       }
     }
     else {
@@ -148,14 +148,14 @@ module.exports = class Cards {
   }
 
   startGame(user, parsedCommands) {
-    this.playerCoins[user.id] = this.playerCoins[user.id] || 1000;
-    this.sendMessage(`You have ${this.playerCoins[user.id]} coins`, user.color, false, user);
+    this.userCoins[user.id] = this.userCoins[user.id] || 1000;
+    this.sendMessage(`You have ${this.userCoins[user.id]} coins`, user.color, false, user);
 
     switch (parsedCommands.start.toLowerCase()) {
       case 'bj':
         if (!this.games.bj) {
           let cards = new Deck(constants.BLACKJACK);
-          this.games.bj = new BlackJack(cards, user, parsedCommands, this.reply, this.playerCoins);
+          this.games.bj = new BlackJack(cards, user, parsedCommands, this.reply, this.userCoins);
         }
         else {
           this.sendMessage('A game of blackjack is already in progress. Type /cards --join bj to join.', 'red', false, user);
