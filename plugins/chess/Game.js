@@ -50,9 +50,8 @@ module.exports = class Game {
                 cursor: 'default'
               });
             }
-            
+
             $(this).off().click(function() {
-              console.log('first ', $(this), availableMove);
               if (availableMove) {
                 var input;
                 if ($('form input').val() == '') {
@@ -85,7 +84,6 @@ module.exports = class Game {
               });
             }
             $(this).off().click(function() {
-              console.log('second ', $(this), availableMove);
               if (availableMove) {
                 var input;
                 if ($('form input').val().split(' -').length == 2) {
@@ -103,7 +101,7 @@ module.exports = class Game {
 
         firstMove(playerColor, currentPlayer);
       </script>
-      <ul class="chess-board" style="display: flex; flex-flow: column; justify-content: center; height: 100%; width: 100%; background-color: midnightblue; border-radius: 50px">
+      <ul class="chess-board" style="display: flex; flex-flow: column; justify-content: center; height: 100%; width: 100%; background-color: midnightblue; border-radius: 8%">
         <li style="display: flex; flex-flow: row; justify-content: center; line-height: 3vw; height: 3vw; width: 100%">
           <span style="width: 3vw; text-align: center; font-weight: bold; background-color:seagreen; line-height: 3vw; border-top-left-radius: 50%"> 8 </span>
           <div id="a8" style="box-sizing: border-box; display: flex; justify-content: center; align-items; center; font-size:2.5vw; width:3vw; height:3vw; background-color:white">${pieceMap[boardRepresentation[0]]}</div>

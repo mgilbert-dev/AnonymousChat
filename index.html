@@ -211,7 +211,6 @@
         });
 
         socket.on('user typing', function(payload) {
-          console.log(payload);
           if (payload.user.id !== myUser.id) {
             $('#typing-status').text(payload.message).css(payload.styling);
             window.clearInterval(myInterval);
