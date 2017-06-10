@@ -9,11 +9,15 @@ module.exports =  class Chess {
     };
   }
 
+  checkMove(user, parsedCommands) {
+    console.log(user, parsedCommands);
+  }
+
   extractCommands(commands) {
     let parsedCommands = {};
     let isValid = true;
     let reason = "";
-    
+    console.log(commands);
     for (let i = 0; i < commands.length; i++) {
 
       if (commands[i].startsWith('--')) {
@@ -22,6 +26,7 @@ module.exports =  class Chess {
       }
       else if (commands[i].startsWith('-')) {
         parsedCommands[commands[i].slice(1)] = true;
+        parsedCommands.move = true;
       }
       else {
         return {
@@ -59,8 +64,11 @@ module.exports =  class Chess {
       if (parsedCommands.challenge) {
         this.start(user, parsedCommands);
       }
+      else if (parsedCommands.move) {
+        this.checkMove(user, parsedCommands);
+      }
       else {
-        this.sendMessage('You must issue one of the following commands: \'/cards --start [game] -[#users]\',\'/cards --join [game]\', or \'--help [game]/all\'', 'red', false, user);
+        this.sendMessage('You must issue one of the following commands: \'/chess --challenge [gameId]\',\'/chess --accept [gameId]\', or \'--chess --watch [gameId]\'', 'red', false, user);
       }
     }
     else {
@@ -93,7 +101,7 @@ module.exports =  class Chess {
   start(user, parsedCommands) {
     let newGame = new Game(user);
     this.games[parsedCommands.challenge] = newGame;
-    let html = newGame.generateHtml();
+    let html = newGame.generateHtml(user);
     this.render({
       user: user,
       html: html
