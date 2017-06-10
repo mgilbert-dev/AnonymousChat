@@ -3,6 +3,7 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const RockPaperScissors = require('./plugins/rps/RockPaperScissors.js');
 const Cards = require('./plugins/cards/Cards.js');
+const Chess = require('./plugins/chess/Chess.js');
 
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html');
@@ -29,6 +30,14 @@ const allCommands = (basicCommands) => {
     basicCommands = basicCommands.concat(plugins[plugin].availableCommands);
   });
   return basicCommands;
+};
+
+const render = (payload) => {
+  if (payload) {
+    io.emit('slide window', payload);
+  } else {
+    throw "ui must contain a key for  'users', and a key for 'payload'";
+  }
 };
 
 let basicCommands = [
@@ -74,7 +83,16 @@ const plugins = {
     availableCommands: [
       '\'/cards --help all\' - Display all available commands for Cards.'
     ],
-    plugin: new Cards((payload) => reply(payload))
+    plugin: new Cards((payload) => reply(payload), (ui) => render(ui))
+  },
+  chess: {
+    availableCommands: [
+      '\'/chess --challenge [gameId]\' - Create an open challenge with id of [gameId]',
+      '\'/chess --accept [gameId]\' - Accept a challenge with id [gameId].',
+      '\'/chess --resign\' - Resign the current game.',
+      '\'/chess -[from] -[to] \' - e.g., \'/chess -e2 -e4\''
+    ],
+    plugin: new Chess((payload) => reply(payload), (ui) => render(ui))
   }
 };
 
@@ -98,7 +116,7 @@ io.on('connection', function(socket) {
   });
 
   socket.on('disconnect', function(){
-    let userName;
+    let userName = 'Someone';
     let userId;
     for (let user in users) {
       if (users.hasOwnProperty(user)) {
@@ -120,7 +138,9 @@ io.on('connection', function(socket) {
   });
 
   socket.on('chat message', function(payload) {
-    guaranteeUserMatch(payload.user);
+    if (!guaranteeUserMatch(payload.user)) {
+      return false;
+    }
 
     if (payload.message.startsWith('/')) {
       handleCommand(payload);
@@ -277,7 +297,10 @@ function emitWarning(message, user) {
 }
 
 function guaranteeUserMatch(user) {
-  if (!users[user.id]) {
+  if (user && !users[user.id]) {
     users[user.id] = user;
+  } else if (!user) {
+    return false;
   }
+  return true;
 }
