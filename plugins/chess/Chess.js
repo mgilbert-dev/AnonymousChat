@@ -25,7 +25,7 @@ module.exports =  class Chess {
         i++;
       }
       else if (commands[i].startsWith('-')) {
-        parsedCommands[commands[i].slice(1)] = true;
+        parsedCommands[commands[i].slice(1)] = i;
         parsedCommands.move = true;
       }
       else {
@@ -52,6 +52,16 @@ module.exports =  class Chess {
     return true;
   }
 
+  joinGame(user, parsedCommands) {
+    this.games[parsedCommands.accept].joinGame(user);
+    let html = this.games[parsedCommands.accept].generateHtml(user);
+    this.sendMessage(`${user.name} has joined game ${parsedCommands.accept}! Watch their game by typing \'/chess --watch ${parsedCommands.accept}\'.`, 'seagreen', true);
+    this.render({
+      user: user,
+      html: html
+    });
+  }
+
   parseReason(command) {
     return `\'${command}\' is not a valid command.`;
   }
@@ -62,10 +72,15 @@ module.exports =  class Chess {
 
     if (parsedCommands.isValid) {
       if (parsedCommands.challenge) {
-        this.start(user, parsedCommands);
+        this.startGame(user, parsedCommands);
       }
       else if (parsedCommands.move) {
         this.checkMove(user, parsedCommands);
+      }
+      else if (parsedCommands.accept) {
+        this.joinGame(user, parsedCommands);
+      } else if (parsedCommands.watch) {
+        this.watchGame(user, parsedCommands);
       }
       else {
         this.sendMessage('You must issue one of the following commands: \'/chess --challenge [gameId]\',\'/chess --accept [gameId]\', or \'--chess --watch [gameId]\'', 'red', false, user);
@@ -98,10 +113,21 @@ module.exports =  class Chess {
     }
   }
 
-  start(user, parsedCommands) {
+  startGame(user, parsedCommands) {
     let newGame = new Game(user);
     this.games[parsedCommands.challenge] = newGame;
     let html = newGame.generateHtml(user);
+    this.sendMessage(`${user.name} has started a game of Chess! Accept their challenge by typing \'/chess --accept ${parsedCommands.challenge}\'.`, 'seagreen', true);
+    this.render({
+      user: user,
+      html: html
+    });
+  }
+
+  watchGame(user, parsedCommands) {
+    this.games[parsedCommands.watch].watchGame(user);
+    let html = this.games[parsedCommands.watch].generateHtml(user);
+    this.sendMessage(`${user.name} has started watching a game of Chess! Join them by typing \'/chess --watch ${parsedCommands.watch}\'.`, 'seagreen', true);
     this.render({
       user: user,
       html: html
