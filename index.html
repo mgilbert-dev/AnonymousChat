@@ -147,12 +147,10 @@
 
         socket.on('slide window', function(payload) {
           if (payload.broadcast || (payload.user && payload.user.id === myUser.id) || (payload.users && payload.users.find(el => el === myUser.id))) {
-            // $('#sliding-window').animate({
-            //   top: "0"
-            // },300);
-
             $('#sliding-window').empty().append(payload.html);
-            $('#sliding-window').fadeIn("slow");
+            $('#sliding-window').fadeIn({
+              easing: 'linear'
+            });
           }
         });
 
