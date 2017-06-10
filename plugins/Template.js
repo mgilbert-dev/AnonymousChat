@@ -10,9 +10,9 @@ const TemplateSession = class TemplateSession {
 };
 
 module.exports =  class Template {
-  constructor(reply, ui) {
+  constructor(reply, render) {
     this.reply = reply;
-    this.ui = ui;
+    this.render = render;
     this.sessions = {
 
     };
@@ -74,6 +74,28 @@ module.exports =  class Template {
     }
     else {
       this.sendMessage(parsedCommands.reason, 'red', false, user);
+    }
+  }
+
+  sendMessage(message, color, broadcast = true, user = false) {
+
+    if (broadcast) {
+      this.reply({
+        broadcast: true,
+        message: message,
+        styling: {
+          color: color
+        }
+      });
+    }
+    else {
+      this.reply({
+        user: user,
+        message: message,
+        styling: {
+          color: color
+        }
+      });
     }
   }
 
