@@ -203,4 +203,18 @@ module.exports = class Game {
       </ul>
     `;
   }
+
+  joinGame(user) {
+    this.users[user.id] = {
+      user: user,
+      color: 'w'
+    };
+  }
+
+  watchGame(user) {
+    this.users[user.id] = {
+      user: user,
+      color: 'v'
+    };
+  }
 };
