@@ -64,8 +64,10 @@
         var ul = document.getElementById('messages');
         var observer = new MutationObserver(function(mutations) {
           mutations.forEach(function(mutation) {
-            let offsetTop = mutation.addedNodes[0].offsetTop;
-            ul.scrollTop = offsetTop;
+            if (mutation && mutation.addedNodes[0]) {
+              let offsetTop = mutation.addedNodes[0].offsetTop;
+              ul.scrollTop = offsetTop;
+            }
           });    
         });
         var config = { attributes: true, childList: true, characterData: true };
@@ -79,6 +81,8 @@
           id: makeId(),
           color: 'limegreen'
         };
+
+        sessionStorage.setItem('id', myUser.id);
         let inputs = [];
         let inputCounter = -1;
 
@@ -148,6 +152,9 @@
         socket.on('slide window', function(payload) {
           if (payload.broadcast || (payload.user && payload.user.id === myUser.id) || (payload.users && payload.users.find(el => el === myUser.id))) {
             $('#sliding-window').empty().append(payload.html);
+            $('#messages').css({
+              maxWidth: '50vw'
+            });
             $('#sliding-window').fadeIn({
               easing: 'linear'
             });
