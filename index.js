@@ -164,7 +164,7 @@ io.on('connection', function(socket) {
       setTimeout(() => {
         users[payload.user.id].lockedOut = false;
       },5000);
-    } else if (users[payload.user.id] && !users[payload.user.id].lockedOut) {
+    } else if (payload.user && users[payload.user.id] && !users[payload.user.id].lockedOut) {
       io.emit('user typing', {
         user: payload.user,
         message: `${payload.user.name} is typing...`,
