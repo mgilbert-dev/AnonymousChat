@@ -120,12 +120,12 @@ module.exports = class Game {
         .chess-board li div { box-sizing: border-box; display: flex; justify-content: center; align-items; center; font-size:2.5vw; width:3vw; height:3vw }
         .chess-board li span.bottom { font-weight: bold; width: 3vw; text-align:center; background-color:seagreen; line-height: 3vw }
         @media screen and (max-device-width: 480px) {
-          ul.chess-board { display: flex; flex-flow: column; justify-content: center; height: 100%; width: 100%; background-color: midnightblue; border-radius: 8% }
-          .chess-board li { display: flex; flex-flow: row; justify-content: center; line-height: 3vw; height: 3vw; width: 100% }
-          .chess-board li.bottom { margin-left: 1.5vw }
-          .chess-board li span.left { width: 3vw; text-align: center; font-weight: bold; background-color:seagreen; line-height: 3vw }
-          .chess-board li div { box-sizing: border-box; display: flex; justify-content: center; align-items; center; font-size:2.5vw; width:3vw; height:3vw }
-          .chess-board li span.bottom { font-weight: bold; width: 3vw; text-align:center; background-color:seagreen; line-height: 3vw }
+          span.w, span.b { font-size: 10vw; margin: auto auto }
+          .chess-board li { height: 12.5%; width: 100% }
+          .chess-board li.bottom { display: none }
+          .chess-board li span.left { display: none }
+          .chess-board li div { width:12.5%; height: 100% }
+          .chess-board li span.bottom { display: none }
         }
       </style>
       <ul class="chess-board">
