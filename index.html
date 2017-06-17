@@ -294,6 +294,13 @@
           }
         });
 
+        socket.on('cipher', function(payload) {
+          if (payload.broadcast || payload.user.id === myUser.id) {
+            let messageElement = $('<li>').text(payload.message).css({color: 'red'});
+            $('#messages').append(messageElement);
+          }
+        });
+
         function makeId() {
           let text = "";
           let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

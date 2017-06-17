@@ -4,6 +4,7 @@ const io = require('socket.io')(http);
 const RockPaperScissors = require('./plugins/rps/RockPaperScissors.js');
 const Cards = require('./plugins/cards/Cards.js');
 const Chess = require('./plugins/chess/Chess.js');
+const crypto = require('crypto');
 
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html');
@@ -47,7 +48,10 @@ let basicCommands = [
   '\'/whisper [name] [message]\' - Directly message everyone with that name.',
   '\'/save [key1] [key2]...\' - Save user information to local storage. Available keys are \'name\', \'id\', and \'color.\'',
   '\'/delete [key1] [key2]...\' - Delete user information saved on local storage. Available keys are \'name\', \'id\', and \'color.\'',
-  '\'/close\' - Close any active windows.'
+  '\'/close\' - Close any active windows.',
+  '\'/cipher [key]\' - Set a cipher key to encrypt outgoing messages.',
+  '\'/decipher [key]\' - Set a decipher key to decrypt incoming messages.',
+  '\'/uncipher\' - Remove cipher from outgoing messages.'
 ];
 
 /* PLUGIN CONTRACT
@@ -147,13 +151,35 @@ io.on('connection', function(socket) {
       handleCommand(payload);
     }
     else if (payload.message !== '') {
-      io.emit('chat message', {
-        message: users[payload.user.id].name + ': ' + payload.message,
-        styling: {
-          color: payload.user.color
-        },
-        broadcast: true
-      });
+      if (users[payload.user.id].cipher) {
+        let cipheredMessage = cipher(createCipher(users[payload.user.id].cipher), payload.message);
+        io.emit('chat message', {
+          message: users[payload.user.id].name + ': ' + cipheredMessage,
+          styling: {
+            color: payload.user.color
+          },
+          broadcast: true
+        });
+        for (let user in users) {
+          if (users.hasOwnProperty(user) && users[user].decipher) {
+            let decipheredMessage = decipher(createDecipher(users[user].decipher), cipheredMessage);
+            console.log(users[user].decipher, users[payload.user.id].cipher);
+            console.log(decipheredMessage);
+            io.emit('cipher', {
+              message: `Deciphered: ${decipheredMessage}`,
+              user: users[user]
+            });
+          }
+        }
+      } else {
+        io.emit('chat message', {
+          message: users[payload.user.id].name + ': ' + payload.message,
+          styling: {
+            color: payload.user.color
+          },
+          broadcast: true
+        });
+      }
     }
   });
 
@@ -269,6 +295,30 @@ function handleCommand(payload) {
       });
       break;
 
+    case '/cipher':
+      users[payload.user.id].cipher = args[0];
+      io.emit('cipher', {
+        message: 'Cipher set',
+        user: payload.user
+      });
+      break;
+
+    case '/decipher':
+      users[payload.user.id].decipher = args[0];
+      io.emit('cipher', {
+        message: 'Decipher set',
+        user: payload.user
+      });
+      break;
+
+    case '/uncipher':
+      users[payload.user.id].cipher = false;
+      io.emit('cipher', {
+        message: 'Cipher unset',
+        user: payload.user
+      });
+      break;
+
     default:
       for (let plugin in plugins) {
         if (plugins.hasOwnProperty(plugin)) {
@@ -295,4 +345,29 @@ function guaranteeUserMatch(user) {
     return false;
   }
   return true;
+}
+
+function createCipher(key) {
+  return crypto.createCipher('aes192', key);
+}
+
+function cipher(userCipher, text) {
+  let encrypted = userCipher.update(text);
+  encrypted += userCipher.final('hex');
+  return encrypted;
+}
+
+function createDecipher(key) {
+  return crypto.createDecipher('aes192', key);
+}
+
+function decipher(userDecipher, encrypted) {
+  let decrypted;
+  try {
+    decrypted = userDecipher.update(encrypted, 'hex', 'utf8');
+    decrypted += userDecipher.final('utf8');
+  } catch (ex) {
+    decrypted = "Incompatible decipher";
+  }
+  return decrypted;
 }
