@@ -253,6 +253,9 @@ module.exports = class Game {
           }
         }
         this.board.legalMoves = this.board.findLegalMoves();
+        if (this.board.legalMoves.length === 0) {
+          sendMessage(`Checkmate! ${user.name} wins!`, 'gold', true, user);
+        }
       } else {
         sendMessage('That is not a valid move.', 'red', false, user);
         this.renderBoardState(user,render);
@@ -268,6 +271,17 @@ module.exports = class Game {
       user: user,
       html: html
     });
+  }
+
+  resetGame(user, sendMessage, render) {
+    this.board = new Board();
+    this.currentTurn = user.id;
+    sendMessage(`${user.name} reset the game.`, 'red', true, user);
+    for (let player in this.users) {
+      if (this.users.hasOwnProperty(player)) {
+        this.renderBoardState(this.users[player].user, render);
+      }
+    }
   }
 
   swapTurns(currentTurn) {
