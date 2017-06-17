@@ -152,9 +152,14 @@ io.on('connection', function(socket) {
     }
     else if (payload.message !== '') {
       if (users[payload.user.id].cipher) {
-        let cipheredMessage = cipher(createCipher(users[payload.user.id].cipher), payload.message);
+        let cipheredMessage = payload.message.split(' ')
+                                .filter(el => el.length < 16)
+                                .map(el => {
+                                  return cipher(createCipher(users[payload.user.id].cipher), el);
+                                })
+                                .join(' ');
         io.emit('chat message', {
-          message: users[payload.user.id].name + ': ' + cipheredMessage,
+          message: users[payload.user.id].name + ': (encrypted) ' + cipheredMessage,
           styling: {
             color: payload.user.color
           },
@@ -162,9 +167,11 @@ io.on('connection', function(socket) {
         });
         for (let user in users) {
           if (users.hasOwnProperty(user) && users[user].decipher) {
-            let decipheredMessage = decipher(createDecipher(users[user].decipher), cipheredMessage);
-            console.log(users[user].decipher, users[payload.user.id].cipher);
-            console.log(decipheredMessage);
+            let decipheredMessage = cipheredMessage.split(' ')
+                                      .map(el => {
+                                        return decipher(createDecipher(users[user].decipher), el);
+                                      })
+                                      .join(' ');
             io.emit('cipher', {
               message: `Deciphered: ${decipheredMessage}`,
               user: users[user]
@@ -367,7 +374,7 @@ function decipher(userDecipher, encrypted) {
     decrypted = userDecipher.update(encrypted, 'hex', 'utf8');
     decrypted += userDecipher.final('utf8');
   } catch (ex) {
-    decrypted = "Incompatible decipher";
+    decrypted = "*";
   }
   return decrypted;
 }
