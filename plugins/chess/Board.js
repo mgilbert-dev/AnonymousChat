@@ -5,13 +5,11 @@ module.exports = class Board {
     this.specialMoves = {
       w: {
         queenSideCastle: true,
-        kingSideCastle: true,
-        enPassant: false
+        kingSideCastle: true
       },
       b: {
         queenSideCastle: true,
-        kingSideCastle: true,
-        enPassant: false
+        kingSideCastle: true
       }
     };
     this.legalMoves = this.findLegalMoves(this.board, this.currentTurn);
@@ -123,7 +121,7 @@ module.exports = class Board {
   }
 
   getColor(position, board) {
-    if (!board[position] || board[position] == '0') return false;
+    if (!board[position] || board[position] == '0' || board[position] === '-') return false;
     return board[position].toUpperCase() === board[position] ? 'w' : 'b';
   }
 
@@ -154,13 +152,13 @@ module.exports = class Board {
 
     let leftCapture = this.getColor(position + increments[0] - 1, board);
     let rightCapture = this.getColor(position + increments[0] + 1, board);
+    
     if (leftCapture && leftCapture !== color) {
       legalMoves.push(`${position}-${position + increments[0] - 1}`);
     }
     if (rightCapture && rightCapture !== color) {
       legalMoves.push(`${position}-${position + increments[0] + 1}`);
     }
-    //Check for en passant here
     return legalMoves;
   }
 
@@ -301,8 +299,6 @@ module.exports = class Board {
   }
 
   makeMove(from, to) {
-    this.specialMoves.b.enPassant = false;
-    this.specialMoves.w.enPassant = false;
     switch (this.board[from]) {
       case 'K':
         this.specialMoves.w.kingSideCastle = false;
@@ -334,18 +330,6 @@ module.exports = class Board {
           this.specialMoves.b.kingSideCastle = false;
         }
         break;
-
-      case 'P':
-        if (Math.abs(from - to) === 20) {
-          this.specialMoves.b.enPassant = to;
-        }
-        break;
-
-      case 'p':
-        if (Math.abs(from - to) === 20) {
-        this.specialMoves.w.enPassant = to;
-        }
-      break;
     
       default:
         break;
