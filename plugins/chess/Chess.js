@@ -19,7 +19,7 @@ module.exports =  class Chess {
     for (let i = 0; i < commands.length; i++) {
 
       if (commands[i].startsWith('--')) {
-        parsedCommands[commands[i].slice(2)] = commands[i + 1];
+        parsedCommands[commands[i].slice(2)] = commands[i + 1] || true;
         i++;
       }
       else if (commands[i].startsWith('-')) {
@@ -89,14 +89,14 @@ module.exports =  class Chess {
     if (parsedCommands.isValid) {
       if (parsedCommands.challenge) {
         this.startGame(user, parsedCommands);
-      }
-      else if (parsedCommands.move) {
+      } else if (parsedCommands.move) {
         this.move(user, parsedCommands);
-      }
-      else if (parsedCommands.accept) {
+      } else if (parsedCommands.accept) {
         this.joinGame(user, parsedCommands);
       } else if (parsedCommands.watch) {
         this.watchGame(user, parsedCommands);
+      } else if (parsedCommands.reset) {
+        this.resetGame(user);
       }
       else {
         this.sendMessage('You must issue one of the following commands: \'/chess --challenge [gameId]\',\'/chess --accept [gameId]\', or \'--chess --watch [gameId]\'', 'red', false, user);
@@ -104,6 +104,12 @@ module.exports =  class Chess {
     }
     else {
       this.sendMessage(parsedCommands.reason, 'red', false, user);
+    }
+  }
+
+  resetGame(user) {
+    if (this.games[this.users[user.id]]) {
+      this.games[this.users[user.id]].resetGame(user, this.sendMessage.bind(this), this.render.bind(this));
     }
   }
 

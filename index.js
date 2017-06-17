@@ -91,7 +91,8 @@ const plugins = {
       '\'/chess --challenge [gameId]\' - Create an open challenge with id of [gameId]',
       '\'/chess --accept [gameId]\' - Accept a challenge with id [gameId].',
       '\'/chess --resign\' - Resign the current game.',
-      '\'/chess -[from] -[to] \' - e.g., \'/chess -e2 -e4\''
+      '\'/chess -[from] -[to] \' - e.g., \'/chess -e2 -e4\'',
+      '\'/chess --reset\' - Reset your current game',
     ],
     plugin: new Chess((payload) => reply(payload), (ui) => render(ui))
   }
