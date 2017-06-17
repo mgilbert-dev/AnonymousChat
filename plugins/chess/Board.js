@@ -2,7 +2,6 @@ module.exports = class Board {
   constructor() {
     this.board = '00000000000rnbqkbnr00pppppppp00--------00--------00--------00--------00PPPPPPPP00RNBQKBNR00000000000';
     this.currentTurn = 'w';
-    this.legalMoves = this.findLegalMoves(this.board, this.currentTurn);
     this.specialMoves = {
       w: {
         queenSideCastle: true,
@@ -15,6 +14,7 @@ module.exports = class Board {
         enPassant: false
       }
     };
+    this.legalMoves = this.findLegalMoves(this.board, this.currentTurn);
   }
 
   castle(from, to) {
@@ -192,7 +192,7 @@ module.exports = class Board {
         pointer += increments[i];
         if (board[pointer] === '-') {
           legalMoves.push(`${position}-${pointer}`);
-        } else if (this.getColor(pointer, board) !== color) {
+        } else if (this.getColor(pointer, board) && this.getColor(pointer, board) !== color) {
           legalMoves.push(`${position}-${pointer}`);
           break;
         } else {
@@ -211,7 +211,7 @@ module.exports = class Board {
         continue;
       } else if (board[pointer] === '-') {
         legalMoves.push(`${position}-${pointer}`);
-      } else if (this.getColor(pointer, board) !== color) {
+      } else if (this.getColor(pointer, board) && this.getColor(pointer, board) !== color) {
         legalMoves.push(`${position}-${pointer}`);
       }
     }
@@ -353,7 +353,6 @@ module.exports = class Board {
     this.board = this.updateBoard(this.board, to, this.board[from]);
     this.board = this.updateBoard(this.board, from, '-');
     this.currentTurn = this.currentTurn === 'w' ? 'b' : 'w';
-    this.findLegalMoves();
   }
 
   testMove(move, board) {
