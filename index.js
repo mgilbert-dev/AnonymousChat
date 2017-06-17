@@ -46,7 +46,8 @@ let basicCommands = [
   '\'/users\' - List users in room.', 
   '\'/whisper [name] [message]\' - Directly message everyone with that name.',
   '\'/save [key1] [key2]...\' - Save user information to local storage. Available keys are \'name\', \'id\', and \'color.\'',
-  '\'/delete [key1] [key2]...\' - Delete user information saved on local storage. Available keys are \'name\', \'id\', and \'color.\''
+  '\'/delete [key1] [key2]...\' - Delete user information saved on local storage. Available keys are \'name\', \'id\', and \'color.\'',
+  '\'/close\' - Close any active windows.'
 ];
 
 /* PLUGIN CONTRACT
@@ -273,6 +274,12 @@ function handleCommand(payload) {
     case '/delete':
       io.emit('delete data', {
         keys: args,
+        user: payload.user
+      });
+      break;
+
+    case '/close':
+      io.emit('close sliding window', {
         user: payload.user
       });
       break;
