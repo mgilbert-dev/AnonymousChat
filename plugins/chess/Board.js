@@ -47,7 +47,7 @@ module.exports = class Board {
 
         case 'b':
           if (currentTurn === 'b') {
-            legalMoves = legalMoves.concat(this.getRookMoves(i, board, currentTurn));
+            legalMoves = legalMoves.concat(this.getBishopMoves(i, board, currentTurn));
           }
           break;
 
@@ -123,7 +123,7 @@ module.exports = class Board {
   }
 
   getColor(position, board) {
-    if (!board[position]) return false;
+    if (!board[position] || board[position] == '0') return false;
     return board[position].toUpperCase() === board[position] ? 'w' : 'b';
   }
 
