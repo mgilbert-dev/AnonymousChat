@@ -68,7 +68,7 @@ let basicCommands = [
       payload.broadcast bypasses the above and displays the message to the channel
 
   Receiving inputs: Commands will be issued through a class method Plugin.receiveCommand(user, command).
-    The first argument will be a user object with the following: {name: String, id: String, color: String, lockedOut: Boolean, socketId: String}
+    The first argument will be a user object with the following: {name: String, id: String, color: String, socketId: String}
     The second argument will be an array of commands, space delimited. E.g., the command '/plugin start game for 5 players' would yield an array of ['start', 'game', 'for', '5', 'players']
 */
 
@@ -104,7 +104,6 @@ io.on('connection', function(socket) {
       name: payload.user.name,
       socketId: socket.id,
       color: payload.user.color,
-      lockedOut: false,
       id: payload.user.id
     };
     io.emit('update users', {
@@ -160,26 +159,12 @@ io.on('connection', function(socket) {
 
   socket.on('user typing', function(payload) {
     guaranteeUserMatch(payload.user);
-
-    if (payload.key === '/') {
-      users[payload.user.id].lockedOut = true;
-      setTimeout(() => {
-        users[payload.user.id].lockedOut = false;
-      },5000);
-    } else if (payload.user && users[payload.user.id] && !users[payload.user.id].lockedOut) {
-      io.emit('user typing', {
-        user: payload.user,
-        message: `${payload.user.name} is typing...`,
-        styling: {
-          color: 'white'
-        }
-      });
-    }
-  });
-
-  socket.on('user stop typing', function(payload) {
-    io.emit('user stop typing', {
-      user: payload.user
+    io.emit('user typing', {
+      user: payload.user,
+      message: `${payload.user.name} is typing...`,
+      styling: {
+        color: 'white'
+      }
     });
   });
 });
@@ -191,7 +176,6 @@ http.listen(process.env.PORT || 5000, function() {
 function handleCommand(payload) {
   let operation = payload.message.split(' ')[0];
   let args = payload.message.substring(operation.length + 1).split(' ');
-  users[payload.user.id].lockedOut = false;
 
   switch (operation) {
 
