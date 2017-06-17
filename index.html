@@ -122,10 +122,12 @@
           
           if (e.key === 'ArrowUp') {
             inputCounter++;
+            inputCounter = Math.min(inputs.length, inputCounter);
             $('#m').val(inputs[inputCounter]);
           }
           else if (e.key === 'ArrowDown') {
             inputCounter--;
+            inputCounter = Math.max(0, inputCounter);
             $('#m').val(inputs[inputCounter]);
           }
           else {
@@ -134,12 +136,6 @@
           socket.emit('user typing', {
             user: myUser,
             key: e.key
-          });
-        });
-
-        $('#m').keyup(function() {
-          socket.emit('user stop typing', {
-            user: myUser
           });
         });
 
@@ -222,15 +218,9 @@
           if (payload.user.id !== myUser.id) {
             $('#typing-status').text(payload.message).css(payload.styling);
             window.clearInterval(myInterval);
-          }
-        });
-
-        socket.on('user stop typing', function(payload) {
-
-          if (payload.user.id !== myUser.id) {
             myInterval = window.setTimeout(function() {
               $('#typing-status').text('');
-            },2000);
+            },3000);
           }
         });
 
