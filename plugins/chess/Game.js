@@ -41,10 +41,11 @@ module.exports = class Game {
   generateHtml(user) {
     let boardRepresentation = this.board.getBoard();
     let color = this.users[user.id].color;
+    let currentPlayer = this.currentTurn === user.id;
     return `
       <script>
         var playerColor = '${color}';
-        var currentPlayer = '${this.currentTurn}' === '${user.id}';
+        var currentPlayer = ${currentPlayer};
 
         var firstMove = function(pColor, cPlayer) {
           $('.chess-board div').each(function(idx) {
@@ -237,7 +238,7 @@ module.exports = class Game {
   joinGame(user) {
     this.users[user.id] = {
       user: user,
-      color: 'w'
+      color: 'b'
     };
   }
 
@@ -245,11 +246,13 @@ module.exports = class Game {
     if (this.currentTurn === user.id) {
       if (this.board.isLegalMove(posMap[from], posMap[to])) {
         this.board.makeMove(posMap[from], posMap[to]);
+        this.swapTurns(this.currentTurn);
         for (let player in this.users) {
           if (this.users.hasOwnProperty(player)) {
-            this.renderBoard(this.users[player].user,render);
+            this.renderBoardState(this.users[player].user,render);
           }
         }
+        this.board.legalMoves = this.board.findLegalMoves();
       } else {
         sendMessage('That is not a valid move.', 'red', false, user);
         this.renderBoardState(user,render);
@@ -265,6 +268,17 @@ module.exports = class Game {
       user: user,
       html: html
     });
+  }
+
+  swapTurns(currentTurn) {
+    let nextColor = this.users[currentTurn].color === 'w' ? 'b' : 'w';
+    for (let user in this.users) {
+      if (this.users.hasOwnProperty(user)) {
+        if (this.users[user].color === nextColor) {
+          this.currentTurn = user;
+        }
+      }
+    }
   }
 
   watchGame(user) {
