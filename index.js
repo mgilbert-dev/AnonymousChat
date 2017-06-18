@@ -6,6 +6,8 @@ const Cards = require('./plugins/cards/Cards.js');
 const Chess = require('./plugins/chess/Chess.js');
 const crypto = require('crypto');
 
+app.use("/public", require('express').static(__dirname + "/public"));
+
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html');
 });
@@ -92,8 +94,8 @@ const plugins = {
   },
   chess: {
     availableCommands: [
-      '\'/chess --challenge [gameId]\' - Create an open challenge with id of [gameId]',
-      '\'/chess --accept [gameId]\' - Accept a challenge with id [gameId].',
+      '\'/chess --vs [gameId]\' - Create an open challenge with id of [gameId]',
+      '\'/chess --join [gameId]\' - Accept a challenge with id [gameId].',
       '\'/chess --resign\' - Resign the current game.',
       '\'/chess -[from] -[to] \' - e.g., \'/chess -e2 -e4\'',
       '\'/chess --reset\' - Reset your current game',
