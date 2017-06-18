@@ -31,7 +31,7 @@ module.exports = class Game {
     this.users = {
       [user.id]: {
         user: user,
-        color: 'w'
+        color: 'b'
       }
     };
     this.currentTurn = user.id;
@@ -238,7 +238,7 @@ module.exports = class Game {
   joinGame(user) {
     this.users[user.id] = {
       user: user,
-      color: 'b'
+      color: 'w'
     };
   }
 
