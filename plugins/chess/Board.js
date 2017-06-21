@@ -1,7 +1,7 @@
 module.exports = class Board {
   constructor() {
     this.board = '00000000000rnbqkbnr00pppppppp00--------00--------00--------00--------00PPPPPPPP00RNBQKBNR00000000000';
-    this.currentTurn = 'b';
+    this.currentTurn = 'w';
     this.specialMoves = {
       w: {
         queenSideCastle: true,
