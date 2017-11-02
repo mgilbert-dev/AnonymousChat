@@ -82,6 +82,11 @@ The first plugin (a game allowing the channel to engage in Rock, Paper, Scissors
 
 ### Plugin specific features:
 
+#### Chess
+
+- Players can issue and accept challenges, or view ongoing games with commands.
+- Follows standard rules of chess, including en passant, pawn promotion, and castling.
+
 #### Blackjack
 
 - Players compete against the house with a starting purse of $1000.
